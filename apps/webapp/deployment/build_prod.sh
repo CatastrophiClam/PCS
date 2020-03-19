@@ -1,0 +1,1 @@
+ docker build -f deployment/Dockerfile -t webapp:prod app
