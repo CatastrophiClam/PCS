@@ -20,3 +20,7 @@
 - run `docker image ls` to view local images
 - tag image with `docker tag local_repository/local_tag yourhubusername/hub_repository_name:hub_repository_tag
 - push image to DockerHub with `docker push yourhubusername/hub_repository_name`
+
+### Running Docker Images Note
+
+- If any run command error out with `the input device is not a TTY`, put `winpty` before it and run it
