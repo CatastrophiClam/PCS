@@ -31,5 +31,8 @@ deploy-postgres:
 deploy-prod-server:
 	make build-prod-server && make run-prod-server
 
+deploy-dev-server:
+	make build-prod-server && make run-dev-server
+
 deploy-prod-webapp:
 	make build-prod-webapp && make run-prod-webapp
