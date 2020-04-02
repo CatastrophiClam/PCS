@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 import requests
 
 from server.model.repository import Column, Table
@@ -17,6 +17,12 @@ fit_db_to_model(context.repository)
 def hello_world():
     return 'Hello Flask!!'
 
+@app.route('/data/in')
+def data_in():
+    qs = request.query_string
+    js = request.json
+    print(qs)
+    return "Nice"
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
