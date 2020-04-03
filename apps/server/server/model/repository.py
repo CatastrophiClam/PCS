@@ -14,7 +14,7 @@ class Column:
     name: str
     type: str
     is_primary_key: bool = False
-    nullable: bool = False
+    nullable: bool = True
     foreign_key: ForeignKey = None
 
 @dataclass

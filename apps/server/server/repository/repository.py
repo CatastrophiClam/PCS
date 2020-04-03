@@ -46,15 +46,18 @@ class Repository:
     def add_row_to_table(self, row: Row, table_name: str):
         row_id = str(uuid1())
         cols = "id"
-        vals = row_id
+        vals = "'" + row_id + "'"
         if 'hash' in Tables.__annotations__[table_name].__annotations__:
             cols += ", hash"
-            vals += ", {0}".format(self.hash_fields_for_table(row, table_name))
+            vals += ", '{0}'".format(self.hash_fields_for_table(row, table_name))
 
         for key in row:
             if key in Tables.__annotations__[table_name].__annotations__:
                 cols += (", " + key)
-                vals += (", " + row[key])
+                val_to_insert = row[key]
+                if Tables.__annotations__[table_name].__annotations__[key] is str:
+                    val_to_insert = "'" + val_to_insert + "'"
+                vals += (", " + val_to_insert)
         s = "INSERT INTO {0} ({1}) VALUES ({2})".format(table_name, cols, vals)
         cursor = self.connection.cursor()
         cursor.execute(s)
@@ -68,11 +71,14 @@ class Repository:
                          key in Tables.__annotations__[table_name].__annotations__].sort()))
 
     # Check if the row contains any data that can be put into the table
-    @staticmethod
-    def check_table_accepts_data(row: Row, table_name: str):
+    def check_table_accepts_data_recursive(self, row: Row, table_name: str):
         # If the table contains a field that the row provides, then return true
-        for field in Tables.__annotations__[table_name].__annotations__:
+        table_cls = Tables.__annotations__[table_name]
+        for field in table_cls.__annotations__:
             if field in row:
+                return True
+        for foreign_key in table_cls.metadata.foreign_keys:
+            if self.check_table_accepts_data_recursive(row, table_cls.metadata.foreign_keys[foreign_key].reference_table):
                 return True
         return False
 
@@ -87,8 +93,9 @@ class Repository:
         row_for_curr_table = row.copy()
 
         for foreign_key in table_cls.metadata.foreign_keys:
-            foreign_table_name = table_cls.metadata.foreign_keys[foreign_key]
-            if not self.check_table_contains_data(row, foreign_table_name):
+            foreign_table_name = table_cls.metadata.foreign_keys[foreign_key].reference_table
+            if not self.check_table_contains_data(row, foreign_table_name) and \
+                    self.check_table_accepts_data_recursive(row, foreign_table_name):
                 entry_id = self.add_row_to_table_recursive(row, foreign_table_name)
                 row_for_curr_table[foreign_key] = entry_id
         return self.add_row_to_table(row_for_curr_table, table_name)

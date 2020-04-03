@@ -1,6 +1,6 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import requests
-
+from server.model.database import Results
 from server.model.repository import Column, Table
 from server.repository.repository import Repository
 from server.model.server import Context
@@ -17,12 +17,12 @@ fit_db_to_model(context.repository)
 def hello_world():
     return 'Hello Flask!!'
 
-@app.route('/data/in')
+@app.route('/data/in', methods=['POST'])
 def data_in():
-    qs = request.query_string
-    js = request.json
-    print(qs)
-    return "Nice"
+    row = request.json
+    if context.repository.check_table_accepts_data_recursive(row, Results.metadata.name):
+        context.repository.add_row_to_table_recursive(row, Results.metadata.name)
+    return jsonify(success=True)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

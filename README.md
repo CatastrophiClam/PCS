@@ -24,3 +24,5 @@
 ### Running Docker Images Note
 
 - If any run command error out with `the input device is not a TTY`, put `winpty` before it and run it
+- Both the postgres db and server run on the user created docker network "pcs_net". To create this
+  network run `docker network create --driver bridge pcs_net`

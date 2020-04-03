@@ -10,8 +10,8 @@ def get_postgres_connection():
     try:
         connection = psycopg2.connect(user="postgres",
                                       password="testpass",
-                                      host="localhost",
-                                      port="5431"
+                                      host="postgres_db",
+                                      port="5432"
                                       )
         return connection
 
