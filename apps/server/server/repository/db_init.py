@@ -26,7 +26,7 @@ def get_db_type_from_type(obj):
     if obj is str:
         return "VARCHAR"
     if obj is float:
-        return "numeric"
+        return "NUMERIC"
     return None
 
 # Convert a model to a table
@@ -43,10 +43,12 @@ def convert_model_to_struct(name: str, cls):
     return Table(name, columns)
 
 def create_model_class_as_table_in_db(class_name: str, repo: Repository):
-    if class_name not in repo.get_tables():
+    table_names = [t.name for t in repo.get_tables()]
+    if class_name not in table_names:
         cls = Tables.__annotations__[class_name]
         for key in cls.metadata.foreign_keys:
-            if cls.metadata.foreign_keys[key].reference_table not in repo.get_tables():
+            table_names = [t.name for t in repo.get_tables()]
+            if cls.metadata.foreign_keys[key].reference_table not in table_names:
                 create_model_class_as_table_in_db(cls.metadata.foreign_keys[key].reference_table, repo)
         table = convert_model_to_struct(class_name, cls)
         repo.add_table(table)

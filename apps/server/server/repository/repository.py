@@ -1,7 +1,8 @@
 from uuid import uuid1
 
 from server.model.database import Tables, EXCLUDE_FROM_HASH_FIELDS
-from server.model.repository import Table, Column, Row
+from server.model.repository import Table, Column, Row, ForeignKey
+from server.repository.contants import DB_TYPE_TO_DECLARE_TYPE
 from server.repository.results import ResultsRepo
 
 
@@ -10,6 +11,59 @@ class Repository:
     def __init__(self, connection):
         self.connection = connection
         self.results = ResultsRepo(self)
+
+    def get_table_fkeys(self, table_name: str):
+        s = """SELECT
+            kcu.column_name, 
+            ccu.table_name AS foreign_table_name,
+            ccu.column_name AS foreign_column_name 
+        FROM 
+            information_schema.table_constraints AS tc 
+            JOIN information_schema.key_column_usage AS kcu
+              ON tc.constraint_name = kcu.constraint_name
+              AND tc.table_schema = kcu.table_schema
+            JOIN information_schema.constraint_column_usage AS ccu
+              ON ccu.constraint_name = tc.constraint_name
+              AND ccu.table_schema = tc.table_schema
+        WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name='{0}';""".format(table_name)
+        cursor = self.connection.cursor()
+        cursor.execute(s)
+        foreign_keys = {}
+        for k in cursor.fetchall():
+            foreign_keys[k[0]] = ForeignKey(k[1], k[2])
+        cursor.close()
+        return foreign_keys
+
+    # Returns column name of table pkey
+    def get_table_pkey(self, table_name: str):
+        s = """SELECT kcu.column_name as key_column
+        FROM information_schema.table_constraints tco
+        JOIN information_schema.key_column_usage kcu 
+             on kcu.constraint_name = tco.constraint_name
+             and kcu.constraint_schema = tco.constraint_schema
+             and kcu.constraint_name = tco.constraint_name
+        WHERE tco.constraint_type = 'PRIMARY KEY' AND kcu.table_name = '{0}'""".format(table_name)
+        cursor = self.connection.cursor()
+        cursor.execute(s)
+        pkeys = [i[0] for i in cursor.fetchall()]
+        cursor.close()
+        return pkeys
+
+    def get_table_columns(self, table_name: str):
+        s = "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_NAME = '{0}'".format(table_name)
+        cursor = self.connection.cursor()
+        cursor.execute(s)
+        columns = [Column(i[0], DB_TYPE_TO_DECLARE_TYPE[i[1]], nullable=(i[2] == 'YES')) for i in cursor.fetchall()]
+        cursor.close()
+
+        fkeys = self.get_table_fkeys(table_name)
+        pkeys = self.get_table_pkeys(table_name)
+        for col in columns:
+            if col.name in fkeys:
+                col.foreign_key = fkeys[col.name]
+            if col.name in pkeys:
+                col.is_primary_key = True
+        return columns
 
     def add_table(self, table: Table):
         s = "CREATE TABLE {0} (".format(table.name)
@@ -36,8 +90,9 @@ class Repository:
         s = "SELECT * FROM information_schema.tables WHERE table_schema = 'public'"
         cursor = self.connection.cursor()
         cursor.execute(s)
-        tables = [res[2] for res in cursor.fetchall()]
+        table_names = cursor.fetchall()
         cursor.close()
+        tables = [Table(res[2], self.get_table_columns(res[2])) for res in table_names]
         return tables
 
     def add_col_to_table(self, column: Column, table_name: str):
@@ -99,3 +154,12 @@ class Repository:
                 entry_id = self.add_row_to_table_recursive(row, foreign_table_name)
                 row_for_curr_table[foreign_key] = entry_id
         return self.add_row_to_table(row_for_curr_table, table_name)
+
+    def get_results(self):
+        pass
+
+    def get_categories(self):
+        pass
+
+    def get_category_fields(self):
+        pass
