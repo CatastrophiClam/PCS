@@ -35,7 +35,7 @@ class Table:
     def __str__(self):
         s = "TABLE {0}\n".format(self.name)
         for col in self.columns:
-            s += "  {0}\n".format(str(col))
+            s += "    {0}\n".format(str(col))
         s += "\n"
         return s
 

@@ -52,7 +52,7 @@ class Results:
             'project_id': ForeignKey(Project.metadata.name, Project.metadata.primary_key),
             'image_alias_id': ForeignKey(ImageAlias.metadata.name, ImageAlias.metadata.primary_key),
             'testbed_id': ForeignKey(Testbed.metadata.name, Testbed.metadata.primary_key),
-            'chassis_id': ForeignKey(Chassis.metadata.name, Chassis.metadata.primary_key)
+            'chassis_id': ForeignKey(Chassis.metadata.name, Chassis.metadata.primary_key),
         }
     )
 

@@ -1,3 +1,4 @@
+import psycopg2
 from uuid import uuid1
 
 from server.model.database import Tables, EXCLUDE_FROM_HASH_FIELDS
@@ -11,6 +12,18 @@ class Repository:
     def __init__(self, connection):
         self.connection = connection
         self.results = ResultsRepo(self)
+
+    def execute(self, s):
+        cursor = self.connection.cursor()
+        cursor.execute(s)
+        self.connection.commit()
+        data = None
+        try:
+            data = cursor.fetchall()
+        except psycopg2.ProgrammingError:
+            pass
+        cursor.close()
+        return data
 
     def get_table_fkeys(self, table_name: str):
         s = """SELECT
@@ -26,12 +39,10 @@ class Repository:
               ON ccu.constraint_name = tc.constraint_name
               AND ccu.table_schema = tc.table_schema
         WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name='{0}';""".format(table_name)
-        cursor = self.connection.cursor()
-        cursor.execute(s)
+        data = self.execute(s)
         foreign_keys = {}
-        for k in cursor.fetchall():
+        for k in data:
             foreign_keys[k[0]] = ForeignKey(k[1], k[2])
-        cursor.close()
         return foreign_keys
 
     # Returns column name of table pkey
@@ -43,18 +54,14 @@ class Repository:
              and kcu.constraint_schema = tco.constraint_schema
              and kcu.constraint_name = tco.constraint_name
         WHERE tco.constraint_type = 'PRIMARY KEY' AND kcu.table_name = '{0}'""".format(table_name)
-        cursor = self.connection.cursor()
-        cursor.execute(s)
-        pkeys = [i[0] for i in cursor.fetchall()]
-        cursor.close()
+        data = self.execute(s)
+        pkeys = [i[0] for i in data]
         return pkeys
 
     def get_table_columns(self, table_name: str):
         s = "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE FROM information_schema.COLUMNS WHERE TABLE_NAME = '{0}'".format(table_name)
-        cursor = self.connection.cursor()
-        cursor.execute(s)
-        columns = [Column(i[0], DB_TYPE_TO_DECLARE_TYPE[i[1]], nullable=(i[2] == 'YES')) for i in cursor.fetchall()]
-        cursor.close()
+        data = self.execute(s)
+        columns = [Column(i[0], DB_TYPE_TO_DECLARE_TYPE[i[1]], nullable=(i[2] == 'YES')) for i in data]
 
         fkeys = self.get_table_fkeys(table_name)
         pkeys = self.get_table_pkey(table_name)
@@ -81,10 +88,7 @@ class Repository:
         s += "PRIMARY KEY ({0}));".format(primary_key)
         print("Adding table with string: ")
         print(s)
-        cursor = self.connection.cursor()
-        cursor.execute(s)
-        cursor.close()
-        self.connection.commit()
+        self.execute(s)
 
     def get_tables(self):
         s = "SELECT * FROM information_schema.tables WHERE table_schema = 'public'"
@@ -92,11 +96,25 @@ class Repository:
         cursor.execute(s)
         table_names = cursor.fetchall()
         cursor.close()
-        tables = [Table(res[2], self.get_table_columns(res[2])) for res in table_names]
+        tables = {res[2]: Table(res[2], self.get_table_columns(res[2])) for res in table_names}
         return tables
 
-    def add_col_to_table(self, column: Column, table_name: str):
-        pass
+    def remove_table(self, table_name: str):
+        s = "DROP TABLE {0};".format(table_name)
+        self.execute(s)
+
+    def remove_col(self, table_name: str, col_name: str):
+        s = "ALTER TABLE {0} DROP COLUMN {1};".format(table_name, col_name)
+        self.execute(s)
+
+    def add_col(self, column: Column, table_name: str):
+        s = "ALTER TABLE {0} ADD COLUMN {1} {2}".format(table_name, column.name, column.type)
+        if not column.nullable:
+            s += " NOT NULL"
+        if column.foreign_key is not None:
+            s += " REFERENCES {0}({1})".format(column.foreign_key.reference_table, column.foreign_key.reference_col)
+        s += ";"
+        self.execute(s)
 
     def add_row_to_table(self, row: Row, table_name: str):
         row_id = str(uuid1())
@@ -114,10 +132,7 @@ class Repository:
                     val_to_insert = "'" + val_to_insert + "'"
                 vals += (", " + val_to_insert)
         s = "INSERT INTO {0} ({1}) VALUES ({2})".format(table_name, cols, vals)
-        cursor = self.connection.cursor()
-        cursor.execute(s)
-        cursor.close()
-        self.connection.commit()
+        self.execute(s)
         return row_id
 
     @staticmethod
