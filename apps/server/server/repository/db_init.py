@@ -10,8 +10,8 @@ def get_postgres_connection():
     try:
         connection = psycopg2.connect(user="postgres",
                                       password="testpass",
-                                      host="postgres_db",
-                                      port="5432"
+                                      host="localhost",
+                                      port="5431"
                                       )
         return connection
 
@@ -43,7 +43,9 @@ def convert_model_to_struct(name: str, cls):
     return Table(name, columns)
 
 def create_model_class_as_table_in_db(class_name: str, repo: Repository):
-    table_names = [t.name for t in repo.get_tables()]
+    tables = repo.get_tables()
+    print(tables)
+    table_names = [t.name for t in tables]
     if class_name not in table_names:
         cls = Tables.__annotations__[class_name]
         for key in cls.metadata.foreign_keys:

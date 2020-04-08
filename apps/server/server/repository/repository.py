@@ -50,14 +50,14 @@ class Repository:
         return pkeys
 
     def get_table_columns(self, table_name: str):
-        s = "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_NAME = '{0}'".format(table_name)
+        s = "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE FROM information_schema.COLUMNS WHERE TABLE_NAME = '{0}'".format(table_name)
         cursor = self.connection.cursor()
         cursor.execute(s)
         columns = [Column(i[0], DB_TYPE_TO_DECLARE_TYPE[i[1]], nullable=(i[2] == 'YES')) for i in cursor.fetchall()]
         cursor.close()
 
         fkeys = self.get_table_fkeys(table_name)
-        pkeys = self.get_table_pkeys(table_name)
+        pkeys = self.get_table_pkey(table_name)
         for col in columns:
             if col.name in fkeys:
                 col.foreign_key = fkeys[col.name]
