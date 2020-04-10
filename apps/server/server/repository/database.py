@@ -35,4 +35,5 @@ class Database:
         cursor.execute(query)
         data = cursor.fetchall()
         cursor.close()
+        self.connection.commit()
         return data

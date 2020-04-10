@@ -38,12 +38,26 @@ class ImageAlias:
     metadata: TableMetadata = TableMetadata("con_image_alias")
 
 @dataclass
+class TestCase:
+    id: str
+    script_name: str
+    report_name: str
+    category: str
+    trigger: str
+    scale: str
+    router_configfile: str
+    tgen_configfile: str
+    status: str
+    metadata: TableMetadata = TableMetadata("con_test_case")
+
+@dataclass
 class Results:
     id: str
     project_id: str
     image_alias_id: str
     testbed_id: str
     chassis_id: str
+    testcase_id: str
     metadata: TableMetadata = TableMetadata(
         "con_results",
         foreign_keys={
@@ -51,6 +65,7 @@ class Results:
             'image_alias_id': ForeignKey(ImageAlias.metadata.name, ImageAlias.metadata.primary_key),
             'testbed_id': ForeignKey(Testbed.metadata.name, Testbed.metadata.primary_key),
             'chassis_id': ForeignKey(Chassis.metadata.name, Chassis.metadata.primary_key),
+            'testcase_id': ForeignKey(TestCase.metadata.name, TestCase.metadata.primary_key)
         }
     )
 
