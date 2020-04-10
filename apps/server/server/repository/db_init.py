@@ -1,24 +1,8 @@
-import psycopg2
-
-from server.model.database import Tables
+from server.constants import PROJECTS
 from server.model.repository import Column, Table, TableMetadata
+from server.model.server import Context
 from server.repository.repository import Repository
 
-
-def get_postgres_connection():
-    connection = None
-    try:
-        connection = psycopg2.connect(user="postgres",
-                                      password="testpass",
-                                      host="localhost",
-                                      port="5431"
-                                      )
-        return connection
-
-    except (Exception, psycopg2.Error) as error:
-        print("Error while connecting to PostgreSQL", error)
-        if connection is not None:
-            connection.close()
 
 def get_db_type_from_type(obj):
     if obj is int:
@@ -43,20 +27,21 @@ def convert_model_to_struct(name: str, cls):
             print("Found unrecognized field: %s" % cls.__annotations__[key])
     return Table(name, columns)
 
-def create_model_class_as_table_in_db(class_name: str, repo: Repository):
+def create_model_class_as_table_in_db(ctx: Context, class_name: str):
+    repo = ctx.repository
     tables = repo.get_tables()
     table_names = [t for t in tables.keys()]
     if class_name not in table_names:
-        cls = Tables.__annotations__[class_name]
+        cls = ctx.database_model.get_table_class(class_name)
         for key in cls.metadata.foreign_keys:
             table_names = [t for t in repo.get_tables().keys()]
             if cls.metadata.foreign_keys[key].reference_table not in table_names:
-                create_model_class_as_table_in_db(cls.metadata.foreign_keys[key].reference_table, repo)
+                create_model_class_as_table_in_db(ctx, cls.metadata.foreign_keys[key].reference_table,)
         table = convert_model_to_struct(class_name, cls)
         repo.add_table(table)
     else:
         db_table: Table = tables[class_name]
-        program_table: Table = convert_model_to_struct(class_name, Tables.__annotations__[class_name])
+        program_table: Table = convert_model_to_struct(class_name, ctx.database_model.get_table_class(class_name))
         for column in db_table.columns:
             if column.name not in [i.name for i in program_table.columns]:
                 repo.remove_col(class_name, column.name)
@@ -65,10 +50,11 @@ def create_model_class_as_table_in_db(class_name: str, repo: Repository):
                 repo.add_col(column, class_name)
 
 # Fit schema of db to our db model
-def fit_db_to_model(repo: Repository):
-    for key in Tables.__annotations__:
-        create_model_class_as_table_in_db(key, repo)
-    db_tables = repo.get_tables().keys()
-    for table_name in db_tables:
-        if table_name not in Tables.__annotations__:
-            repo.remove_table(table_name)
+def fit_db_to_model(ctx: Context):
+    for project_name in PROJECTS:
+        for class_name in ctx.database_model.get_project_tables(project_name).keys():
+            create_model_class_as_table_in_db(ctx, class_name)
+        db_tables = ctx.repository.get_tables().keys()
+        for table_name in db_tables:
+            if table_name not in ctx.database_model.get_project_tables(project_name).keys():
+                ctx.repository.remove_table(table_name)

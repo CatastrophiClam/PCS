@@ -1,67 +1,26 @@
-from dataclasses import dataclass
+import inspect
+from typing import Dict
+import server.model.projects
 
-from server.model.repository import TableMetadata, ForeignKey
+TableList = Dict[str, object]
 
-"""
-Every table should contain 'id' as a primary key
-Fields not provided to us in data are id, hash and metadata
-"""
+class Database:
 
-EXCLUDE_FROM_HASH_FIELDS = {'id', 'hash', 'metadata'}
+    def __init__(self):
+        self.projects: Dict[str, TableList] = {}  # Map projects to their tables
+        self.tables: TableList = {}               # All tables from all projects in db
 
-@dataclass
-class Chassis:
-    id: str
-    value: str
-    metadata: TableMetadata = TableMetadata("chassis")
+        # look through model/projects directory for classes
+        for project_name, project_module in inspect.getmembers(server.model.projects, inspect.ismodule):
+            self.projects[project_name] = {}
+            for cname, cls in inspect.getmembers(project_module, inspect.isclass):
+                if cls.__module__ == project_module.__name__:
+                    table_name = cls.metadata.name
+                    self.projects[project_name][table_name] = cls
+                    self.tables[table_name] = cls
 
-@dataclass
-class Testbed:
-    id: str
-    platform: str
-    metadata: TableMetadata = TableMetadata("testbed")
+    def get_table_class(self, table_name: str) -> object:
+        return self.tables[table_name] if table_name in self.tables else {}
 
-@dataclass
-class Project:
-    id: str
-    value: str
-    metadata: TableMetadata = TableMetadata("project")
-
-@dataclass
-class ImageAlias:
-    id: str
-    hash: str
-    alias: str
-    release: str
-    version: str
-    efr: str
-    sdk: str
-    smu: str
-    metadata: TableMetadata = TableMetadata("image_alias")
-
-@dataclass
-class Results:
-    id: str
-    project_id: str
-    image_alias_id: str
-    testbed_id: str
-    chassis_id: str
-    metadata: TableMetadata = TableMetadata(
-        "results",
-        foreign_keys={
-            'project_id': ForeignKey(Project.metadata.name, Project.metadata.primary_key),
-            'image_alias_id': ForeignKey(ImageAlias.metadata.name, ImageAlias.metadata.primary_key),
-            'testbed_id': ForeignKey(Testbed.metadata.name, Testbed.metadata.primary_key),
-            'chassis_id': ForeignKey(Chassis.metadata.name, Chassis.metadata.primary_key),
-        }
-    )
-
-# Not a table in db - this keeps track of all our table models
-# Note: variable names here MUST match table names
-@dataclass
-class Tables:
-    results: Results
-    project: Project
-    image_alias: ImageAlias
-    testbed: Testbed
-    chassis: Chassis
+    def get_project_tables(self, project_name: str) -> TableList:
+        return self.projects[project_name] if project_name in self.projects else {}

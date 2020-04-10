@@ -1,10 +1,15 @@
+## Purpose
+The server must keep track of several projects. Each project contains performance data stored in several tables.
+
 ## Database Structure
-- model/database.py contains all the tables in the db as classes.
+
+### Projects
+Each project has its own file under model/projects containing classes that specify the layout of its tables in the db.
 - Columns of the table are class variables in the classes.
 - Each class has a 'metadata' field that is not part of the columns in the database
 - These column names must match the csv headers of the data, and there cannot be 2 same column names
-- The 'Tables' class stores all the tables we have as its class variables.
-  - The names of these class variables must be the same as the name of the table
-  
+
+The
+
 ### Altering DB structure
-- Tables and columns can be added/removed by adding/removing them in the code in model/database.py
+- Tables and columns can be added/removed by adding/removing them in the code in project model file
