@@ -12,6 +12,7 @@ context: Context = Context()
 context.database_model = Struct_Database()
 context.repository = Repository(Repo_Database(), context.database_model)
 fit_db_to_model(context)
+print(context.repository.get_data_for_table("con_results", ["*"], None))
 
 @app.route('/')
 def hello_world():

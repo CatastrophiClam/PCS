@@ -1,4 +1,5 @@
 from server.constants import PROJECTS
+from server.model.base_model_table import BaseModelTable
 from server.model.repository import Column, Table, TableMetadata
 from server.model.server import Context
 from server.repository.repository import Repository
@@ -16,15 +17,16 @@ def get_db_type_from_type(obj):
 # Convert a model to a table
 def convert_model_to_struct(name: str, cls):
     columns = []
-    for key in cls.__annotations__:
-        t = get_db_type_from_type(cls.__annotations__[key])
+    fields = {**BaseModelTable.__annotations__, **cls.__annotations__}
+    for key in fields:
+        t = get_db_type_from_type(fields[key])
         if key in cls.metadata.foreign_keys:
             columns.append(Column(key, "VARCHAR", foreign_key=cls.metadata.foreign_keys[key]))
         elif t is not None:
             columns.append(Column(key, t, key == cls.metadata.primary_key,
                                   key not in cls.metadata.non_nullable_fields and key != cls.metadata.primary_key))
-        elif cls.__annotations__[key] is not TableMetadata:
-            print("Found unrecognized field: %s" % cls.__annotations__[key])
+        elif fields[key] is not TableMetadata:
+            print("Found unrecognized field: %s" % fields[key])
     return Table(name, columns)
 
 def create_model_class_as_table_in_db(ctx: Context, class_name: str):

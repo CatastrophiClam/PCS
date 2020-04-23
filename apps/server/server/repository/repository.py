@@ -1,7 +1,9 @@
+from typing import List, Union, Tuple, Dict
 from uuid import uuid1
 
-from server.model.constants import EXCLUDE_FROM_HASH_FIELDS
+from server.model.constants import EXCLUDE_FROM_HASH_FIELDS, EXCLUDE_FROM_COLUMN_FIELDS
 from server.model.database import Database as Database_Model
+from server.model.query_syntax import WhereClause
 from server.model.repository import Table, Column, Row, ForeignKey
 from server.repository.contants import DB_TYPE_TO_DECLARE_TYPE
 from server.repository.database import Database as Database_Repo
@@ -103,11 +105,8 @@ class Repository:
 
     def add_row_to_table(self, row: Row, table_name: str):
         row_id = str(uuid1())
-        cols = "id"
-        vals = "'" + row_id + "'"
-        if 'hash' in self.db_model.get_table_class(table_name).__annotations__:
-            cols += ", hash"
-            vals += ", '{0}'".format(self.hash_fields_for_table(row, table_name))
+        cols = "id, hash"
+        vals = "'" + row_id + "', '{0}'".format(self.hash_fields_for_table(row, table_name))
 
         for key in row:
             if key in self.db_model.get_table_class(table_name).__annotations__:
@@ -154,8 +153,61 @@ class Repository:
                 row_for_curr_table[foreign_key] = entry_id
         return self.add_row_to_table(row_for_curr_table, table_name)
 
-    def get_results(self):
-        pass
+    def get_all_subtables(self, table_name: str) -> List[str]:
+        table_cls = self.db_model.get_table_class(table_name)
+        l = [foreignKey.reference_table for _, foreignKey in table_cls.metadata.foreign_keys.items()]
+        answer = l.copy()
+        for table in l:
+            answer += self.get_all_subtables(table)
+        return answer
+
+    # Data keys must be in form table_name.field_name
+    def create_object_from_data_recursive(self, table_name: str, data: Dict[str, str]):
+        curr_table_cols = [key for key in vars(self.db_model.get_table_class(table_name)()) if key not in EXCLUDE_FROM_COLUMN_FIELDS]
+        curr_table_data = {key: data["{0}.{1}".format(table_name, key)]
+                           if "{0}.{1}".format(table_name, key) in data else None for key in curr_table_cols}
+        curr_table_cls = self.db_model.get_table_class(table_name)
+        for foreignkey_field, foreignKey in curr_table_cls.metadata.foreign_keys.items():
+            curr_table_data[foreignkey_field] = self.create_object_from_data_recursive(foreignKey.reference_table, data)
+
+        curr_table_is_none = True
+        for k, v in curr_table_data.items():
+            if v is not None:
+                curr_table_is_none = False
+        if curr_table_is_none:
+            return None
+        else:
+            return curr_table_cls(*[curr_table_data[key] for key in curr_table_cols])
+
+    def get_all_subtable_joins(self, table_name: str):
+        s = ""
+        table_cls = self.db_model.get_table_class(table_name)
+        for field_name, foreignKey in table_cls.metadata.foreign_keys.items():
+            s += "LEFT JOIN {0} ON {1}.{2} = {0}.id ".format(foreignKey.reference_table, table_name, field_name)
+            s += self.get_all_subtable_joins(foreignKey.reference_table)
+        return s
+
+    def get_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause) -> List[object]:
+        all_tables = [table_name] + self.get_all_subtables(table_name)
+        subtables_join_str = self.get_all_subtable_joins(table_name)
+        if fields[0] == "*":
+            fields = ["{0}.{1}".format(t_name, col) for t_name in all_tables for col in vars(self.db_model.get_table_class(t_name)()) if col not in EXCLUDE_FROM_COLUMN_FIELDS]
+        fieldStr = ""
+        for i in range(len(fields)):
+            if i > 0:
+                fieldStr += ", "
+            fieldStr += fields[i]
+
+        s = "SELECT {0} FROM {1} {2}".format(fieldStr, table_name, subtables_join_str)
+        print(s)
+        if whereClause is not None:
+            s += " WHERE {0}".format(str(whereClause))
+        data = self.db_repo.fetch(s)
+        formatted_data = [{fields[j]: d[j] for j in range(len(fields))} for d in data]
+        print(data)
+        answers = [self.create_object_from_data_recursive(table_name, d) for d in formatted_data]
+        return answers
+
 
     def get_categories(self):
         pass
