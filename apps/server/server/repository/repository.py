@@ -177,7 +177,7 @@ class Repository:
         if curr_table_is_none:
             return None
         else:
-            return curr_table_cls(*[curr_table_data[key] for key in curr_table_cols])
+            return curr_table_cls(**{key: curr_table_data[key] for key in curr_table_cols})
 
     def get_all_subtable_joins(self, table_name: str):
         s = ""

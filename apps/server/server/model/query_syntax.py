@@ -18,6 +18,7 @@ class LogOp(IntEnum):
     def __str__(self):
         return ["AND", "NOT"][self.value]
 
+@dataclass
 class Value:
     value: Union[str, List[str]]
 
@@ -52,5 +53,5 @@ class WhereClause:
         for i in range(len(self.clause)):
             if i > 0:
                 s += " "
-            i += str(self.clause[i])
+            s += str(self.clause[i])
         return s

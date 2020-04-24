@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from server.model.projects.convergence import Results as Convergence_Results
+from server.model.query_syntax import WhereClause, Statement, Comp, Value
 from server.repository.database import Database as Repo_Database
 from server.model.database import Database as Struct_Database
 from server.repository.repository import Repository
@@ -12,7 +13,7 @@ context: Context = Context()
 context.database_model = Struct_Database()
 context.repository = Repository(Repo_Database(), context.database_model)
 fit_db_to_model(context)
-print(context.repository.get_data_for_table("con_results", ["*"], None))
+print(context.repository.get_data_for_table("con_results", ["*"], WhereClause([Statement("con_results.id", Comp.EQ, Value("718e9ff8-8316-11ea-92ae-e04f438eaa90"))])))
 
 @app.route('/')
 def hello_world():
