@@ -1,9 +1,10 @@
 from typing import List, Union, Tuple, Dict
 from uuid import uuid1
 
+from server.model.base_model_table import BaseModelTable
 from server.model.constants import EXCLUDE_FROM_HASH_FIELDS, EXCLUDE_FROM_COLUMN_FIELDS
 from server.model.database import Database as Database_Model
-from server.model.query_syntax import WhereClause
+from server.model.query_syntax import WhereClause, Statement, LogOp, Comp, Value
 from server.model.repository import Table, Column, Row, ForeignKey
 from server.repository.contants import DB_TYPE_TO_DECLARE_TYPE
 from server.repository.database import Database as Database_Repo
@@ -119,9 +120,8 @@ class Repository:
         self.db_repo.execute(s)
         return row_id
 
-    def hash_fields_for_table(self, fields: Row, table_name: str):
-        return hash(str([key + fields[key] for key in fields if key not in EXCLUDE_FROM_HASH_FIELDS and
-                         key in self.db_model.get_table_class(table_name).__annotations__].sort()))
+    def hash_fields_for_table(self, fields: Row, table_name: str) -> int:
+        return hash(str([key + str(fields[key]) for key in fields if key in self.db_model.get_table_class(table_name).__annotations__].sort()))
 
     # Check if the row contains any data that can be put into the table
     def check_table_accepts_data_recursive(self, row: Row, table_name: str):
@@ -136,9 +136,10 @@ class Repository:
         return False
 
     # Check if table already contains the relevant data in the row
-    @staticmethod
-    def check_table_contains_data(row: Row, table_name: str):
-        return False
+    def check_table_contains_data(self, row: Row, table_name: str):
+        h = str(self.hash_fields_for_table(row, table_name))
+        d = self.get_data_for_table(table_name, ['*'], WhereClause([Statement("{0}.hash".format(table_name), Comp.EQ, Value(h))]))
+        return len(d) > 0
 
     # For when tables have foreign keys to other tables that should have data filled
     def add_row_to_table_recursive(self, row: Row, table_name: str):
@@ -147,10 +148,18 @@ class Repository:
 
         for foreign_key in table_cls.metadata.foreign_keys:
             foreign_table_name = table_cls.metadata.foreign_keys[foreign_key].reference_table
-            if not self.check_table_contains_data(row, foreign_table_name) and \
+
+            data_hash = str(self.hash_fields_for_table(row, foreign_table_name))
+            foreign_table_data_id = self.get_data_for_table(foreign_table_name, ["{0}.id".format(foreign_table_name)],
+                                                            WhereClause([Statement("{0}.hash".format(foreign_table_name),
+                                                                                   Comp.EQ, Value(data_hash))]))
+
+            if len(foreign_table_data_id) == 0 and \
                     self.check_table_accepts_data_recursive(row, foreign_table_name):
                 entry_id = self.add_row_to_table_recursive(row, foreign_table_name)
                 row_for_curr_table[foreign_key] = entry_id
+            elif len(foreign_table_data_id) > 0:
+                row_for_curr_table[foreign_key] = foreign_table_data_id[0].id
         return self.add_row_to_table(row_for_curr_table, table_name)
 
     def get_all_subtables(self, table_name: str) -> List[str]:
@@ -162,8 +171,8 @@ class Repository:
         return answer
 
     # Data keys must be in form table_name.field_name
-    def create_object_from_data_recursive(self, table_name: str, data: Dict[str, str]):
-        curr_table_cols = [key for key in vars(self.db_model.get_table_class(table_name)()) if key not in EXCLUDE_FROM_COLUMN_FIELDS]
+    def create_object_from_data_recursive(self, table_name: str, data: Dict[str, str]) -> BaseModelTable:
+        curr_table_cols = [key for key in vars(self.db_model.get_table_class(table_name)())]
         curr_table_data = {key: data["{0}.{1}".format(table_name, key)]
                            if "{0}.{1}".format(table_name, key) in data else None for key in curr_table_cols}
         curr_table_cls = self.db_model.get_table_class(table_name)
@@ -187,7 +196,7 @@ class Repository:
             s += self.get_all_subtable_joins(foreignKey.reference_table)
         return s
 
-    def get_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause) -> List[object]:
+    def get_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause) -> List[BaseModelTable]:
         all_tables = [table_name] + self.get_all_subtables(table_name)
         subtables_join_str = self.get_all_subtable_joins(table_name)
         if fields[0] == "*":
@@ -199,12 +208,10 @@ class Repository:
             fieldStr += fields[i]
 
         s = "SELECT {0} FROM {1} {2}".format(fieldStr, table_name, subtables_join_str)
-        print(s)
         if whereClause is not None:
             s += " WHERE {0}".format(str(whereClause))
         data = self.db_repo.fetch(s)
         formatted_data = [{fields[j]: d[j] for j in range(len(fields))} for d in data]
-        print(data)
         answers = [self.create_object_from_data_recursive(table_name, d) for d in formatted_data]
         return answers
 
