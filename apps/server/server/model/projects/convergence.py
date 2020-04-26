@@ -35,7 +35,7 @@ class Image(BaseModelTable):
     efr: str = None
     sdk: str = None
     smu: str = None
-    metadata: TableMetadata = TableMetadata("conv_image_alias")
+    metadata: TableMetadata = TableMetadata("conv_image")
 
 @dataclass
 class TestCase(BaseModelTable):
@@ -112,7 +112,7 @@ class Results(BaseModelTable):
     cpu_usage_rp_pim: str = None
     cpu_usage_rp_pim_stddev: str = None
     metadata: TableMetadata = TableMetadata(
-        "con_results",
+        "conv_results",
         foreign_keys={
             'topology_id': ForeignKey(Topology.metadata.name, Topology.metadata.primary_key),
             'image_id': ForeignKey(Image.metadata.name, Image.metadata.primary_key),

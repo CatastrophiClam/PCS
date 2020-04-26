@@ -20,14 +20,15 @@ def hello_world():
 
 @app.route('/data', methods=['GET'])
 def data_out():
-    data = context.repository.get_data_for_table("con_results", ["*"], WhereClause([Statement("con_results.id", Comp.EQ, Value("718e9ff8-8316-11ea-92ae-e04f438eaa90"))]))
+    data = context.repository.get_data_for_table("con_results", ["*"], None)
     return _corsify_actual_response(jsonify([d.to_json() for d in data]))
 
 @app.route('/data/convergence', methods=['POST'])
 def data_in():
-    row = request.json
-    if context.repository.check_table_accepts_data_recursive(row, Convergence_Results.metadata.name):
-        context.repository.add_row_to_table_recursive(row, Convergence_Results.metadata.name)
+    data = request.json
+    for row in data:
+        if context.repository.check_table_accepts_data_recursive(row, Convergence_Results.metadata.name):
+            context.repository.add_row_to_table_recursive(row, Convergence_Results.metadata.name)
     return jsonify(success=True)
 
 def _build_cors_prelight_response():

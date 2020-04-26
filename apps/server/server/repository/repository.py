@@ -110,7 +110,7 @@ class Repository:
         vals = "'" + row_id + "', '{0}'".format(self.hash_fields_for_table(row, table_name))
 
         for key in row:
-            if key in self.db_model.get_table_class(table_name).__annotations__:
+            if key in self.db_model.get_table_class(table_name).__annotations__ and row[key] is not None:
                 cols += (", " + key)
                 val_to_insert = row[key]
                 if self.db_model.get_table_class(table_name).__annotations__[key] is str:
@@ -128,18 +128,12 @@ class Repository:
         # If the table contains a field that the row provides, then return true
         table_cls = self.db_model.get_table_class(table_name)
         for field in table_cls.__annotations__:
-            if field in row:
+            if field in row and row[field] is not None:
                 return True
         for foreign_key in table_cls.metadata.foreign_keys:
             if self.check_table_accepts_data_recursive(row, table_cls.metadata.foreign_keys[foreign_key].reference_table):
                 return True
         return False
-
-    # Check if table already contains the relevant data in the row
-    def check_table_contains_data(self, row: Row, table_name: str):
-        h = str(self.hash_fields_for_table(row, table_name))
-        d = self.get_data_for_table(table_name, ['*'], WhereClause([Statement("{0}.hash".format(table_name), Comp.EQ, Value(h))]))
-        return len(d) > 0
 
     # For when tables have foreign keys to other tables that should have data filled
     def add_row_to_table_recursive(self, row: Row, table_name: str):
