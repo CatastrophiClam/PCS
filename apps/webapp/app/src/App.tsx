@@ -1,10 +1,12 @@
 import React from "react";
 import logo from "./logo.svg";
 import "./App.css";
+import MainPage from "./main_page/MainPage";
 
-function App() {
+const App = () => {
   return (
     <div className="App">
+      <MainPage />
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
@@ -21,6 +23,6 @@ function App() {
       </header>
     </div>
   );
-}
+};
 
 export default App;
