@@ -72,7 +72,6 @@ class Results(BaseModelTable):
     rib_slope_unit: str = None
     rib_slope_stddev: str = None
     detail_result: str = None
-    cpu_usage_rp_pim_unit: str = None
     cpu_usage_lc_egress_fib_mgr: str = None
     cpu_usage_lc_egress_fib_mgr_stddev: str = None
     cpu_usage_lc_egress_fib_mgr_unit: str = None
@@ -110,6 +109,7 @@ class Results(BaseModelTable):
     cpu_usage_rp_ospf: str = None
     cpu_usage_rp_ospf_stddev: str = None
     cpu_usage_rp_pim: str = None
+    cpu_usage_rp_pim_unit: str = None
     cpu_usage_rp_pim_stddev: str = None
     metadata: TableMetadata = TableMetadata(
         "conv_results",

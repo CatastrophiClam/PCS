@@ -158,6 +158,8 @@ class Repository:
 
     def get_all_subtables(self, table_name: str) -> List[str]:
         table_cls = self.db_model.get_table_class(table_name)
+        print(table_name)
+        print(table_cls)
         l = [foreignKey.reference_table for _, foreignKey in table_cls.metadata.foreign_keys.items()]
         answer = l.copy()
         for table in l:
