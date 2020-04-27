@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, make_response, Response
 from server.model.projects.convergence import Results as Convergence_Results
-from server.model.query_syntax import WhereClause, Statement, Comp, Value
+from server.model.query_syntax import WhereClause, Statement, Comp, Value, LogOp
 from server.repository.database import Database as Repo_Database
 from server.model.database import Database as Struct_Database
 from server.repository.repository import Repository
@@ -20,8 +20,14 @@ def hello_world():
 
 @app.route('/data', methods=['GET'])
 def data_out():
-    whereClause = WhereClause(Statement)
-    data = context.repository.get_data_for_table("conv_results", ["*"], None)
+    statementList = []
+    for item in request.args.items():
+        statementList.append(Statement(item[0], Comp.IN, Value(item[1].split(","))))
+        statementList.append(LogOp.AND)
+    statementList = statementList[:-1]
+    whereClause = WhereClause(statementList) if len(statementList) > 0 else None
+
+    data = context.repository.get_data_for_table("conv_results", ["*"], whereClause)
     return _corsify_actual_response(jsonify([d.to_json() for d in data]))
 
 @app.route('/data/convergence', methods=['POST'])

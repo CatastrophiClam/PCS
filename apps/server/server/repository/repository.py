@@ -205,6 +205,7 @@ class Repository:
         s = "SELECT {0} FROM {1} {2}".format(fieldStr, table_name, subtables_join_str)
         if whereClause is not None:
             s += " WHERE {0}".format(str(whereClause))
+        print(s)
         data = self.db_repo.fetch(s)
         formatted_data = [{fields[j]: d[j] for j in range(len(fields))} for d in data]
         answers = [self.create_object_from_data_recursive(table_name, d) for d in formatted_data]

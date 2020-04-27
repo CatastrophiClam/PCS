@@ -24,14 +24,15 @@ class Value:
 
     def __str__(self):
         s: str
-        if self.value is list:
+        if type(self.value) is list:
             s = "("
-            for i in range(len(list)):
+            for i in range(len(self.value)):
                 if i != 0:
                     s += ", "
-                s += self.value[i]
+                s += "'{0}'".format(self.value[i])
+            s += ")"
         else:
-            s = self.value
+            s = "'{0}'".format(self.value)
         return s
 
 
@@ -42,7 +43,7 @@ class Statement:
     value: Value
 
     def __str__(self):
-        return "{0} {1} '{2}'".format(self.variable, str(self.comp), str(self.value))
+        return "{0} {1} {2}".format(self.variable, str(self.comp), str(self.value))
 
 @dataclass
 class WhereClause:
