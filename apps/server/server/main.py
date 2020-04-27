@@ -20,6 +20,7 @@ def hello_world():
 
 @app.route('/data', methods=['GET'])
 def data_out():
+    whereClause = WhereClause(Statement)
     data = context.repository.get_data_for_table("conv_results", ["*"], None)
     return _corsify_actual_response(jsonify([d.to_json() for d in data]))
 

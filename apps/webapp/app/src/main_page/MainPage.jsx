@@ -8,6 +8,12 @@ import OptionsMenu from "./OptionsMenu";
 
 const MainPage = () => {
   const [data, setData] = useState([]);
+  const [columns, setColumns] = useState([
+    "fib_slope",
+    "prefix_sec",
+    "max_delay",
+  ]);
+  const [options, setOptions] = useState({});
 
   const fetchData = async () => {
     const [respData, status] = await getData();
@@ -21,9 +27,9 @@ const MainPage = () => {
   return (
     <PageWrapper>
       <OptionsMenu />
-      <TestCaseDetailsGraph />
+      <TestCaseDetailsGraph data={data} columns={columns} />
       <AdditionalDetailsGraph />
-      <TestCaseDetailsTable data={data} columns={["fib_slope"]} />
+      <TestCaseDetailsTable data={data} columns={columns} />
     </PageWrapper>
   );
 };

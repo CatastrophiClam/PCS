@@ -121,7 +121,9 @@ class Repository:
         return row_id
 
     def hash_fields_for_table(self, fields: Row, table_name: str) -> int:
-        return hash(str([key + str(fields[key]) for key in fields if key in self.db_model.get_table_class(table_name).__annotations__].sort()))
+        hashable_list = [key + str(fields[key]) for key in fields if key in self.db_model.get_table_class(table_name).__annotations__]
+        hashable_list.sort()
+        return hash(str(hashable_list))
 
     # Check if the row contains any data that can be put into the table
     def check_table_accepts_data_recursive(self, row: Row, table_name: str):
@@ -147,19 +149,16 @@ class Repository:
             foreign_table_data_id = self.get_data_for_table(foreign_table_name, ["{0}.id".format(foreign_table_name)],
                                                             WhereClause([Statement("{0}.hash".format(foreign_table_name),
                                                                                    Comp.EQ, Value(data_hash))]))
-
-            if len(foreign_table_data_id) == 0 and \
-                    self.check_table_accepts_data_recursive(row, foreign_table_name):
-                entry_id = self.add_row_to_table_recursive(row, foreign_table_name)
-                row_for_curr_table[foreign_key] = entry_id
-            elif len(foreign_table_data_id) > 0:
-                row_for_curr_table[foreign_key] = foreign_table_data_id[0].id
+            if self.check_table_accepts_data_recursive(row, foreign_table_name):
+                if len(foreign_table_data_id) == 0:
+                    entry_id = self.add_row_to_table_recursive(row, foreign_table_name)
+                    row_for_curr_table[foreign_key] = entry_id
+                else:
+                    row_for_curr_table[foreign_key] = foreign_table_data_id[0].id
         return self.add_row_to_table(row_for_curr_table, table_name)
 
     def get_all_subtables(self, table_name: str) -> List[str]:
         table_cls = self.db_model.get_table_class(table_name)
-        print(table_name)
-        print(table_cls)
         l = [foreignKey.reference_table for _, foreignKey in table_cls.metadata.foreign_keys.items()]
         answer = l.copy()
         for table in l:
