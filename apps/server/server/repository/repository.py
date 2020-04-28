@@ -191,11 +191,13 @@ class Repository:
             s += self.get_all_subtable_joins(foreignKey.reference_table)
         return s
 
-    def get_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause) -> List[BaseModelTable]:
+    # Get data in the form of a list of flat dicts
+    def get_raw_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause) -> List[Dict[str, str]]:
         all_tables = [table_name] + self.get_all_subtables(table_name)
         subtables_join_str = self.get_all_subtable_joins(table_name)
         if fields[0] == "*":
-            fields = ["{0}.{1}".format(t_name, col) for t_name in all_tables for col in vars(self.db_model.get_table_class(t_name)()) if col not in EXCLUDE_FROM_COLUMN_FIELDS]
+            fields = ["{0}.{1}".format(t_name, col) for t_name in all_tables for col in
+                      vars(self.db_model.get_table_class(t_name)()) if col not in EXCLUDE_FROM_COLUMN_FIELDS]
         fieldStr = ""
         for i in range(len(fields)):
             if i > 0:
@@ -208,6 +210,11 @@ class Repository:
         print(s)
         data = self.db_repo.fetch(s)
         formatted_data = [{fields[j]: d[j] for j in range(len(fields))} for d in data]
+        return formatted_data
+
+    # Get data in the form of a list of objects
+    def get_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause) -> List[BaseModelTable]:
+        formatted_data = self.get_raw_data_for_table(table_name, fields, whereClause)
         answers = [self.create_object_from_data_recursive(table_name, d) for d in formatted_data]
         return answers
 

@@ -1,4 +1,8 @@
+from typing import Dict
+
 from flask import Flask, request, jsonify, make_response, Response
+
+from server.model.constants import CONVERGENCE_CATEGORY_TABLES, EXCLUDE_FROM_COLUMN_FIELDS, EXCLUDE_FROM_CATEGORY_FIELDS
 from server.model.projects.convergence import Results as Convergence_Results
 from server.model.query_syntax import WhereClause, Statement, Comp, Value, LogOp
 from server.repository.database import Database as Repo_Database
@@ -30,8 +34,36 @@ def data_out():
     data = context.repository.get_data_for_table("conv_results", ["*"], whereClause)
     return _corsify_actual_response(jsonify([d.to_json() for d in data]))
 
-@app.route('/data/convergence', methods=['POST'])
+@app.route('/categories', methods=['GET'])
+def categories_out():
+    statementList = []
+    for item in request.args.items():
+        statementList.append(Statement(item[0], Comp.IN, Value(item[1].split(","))))
+        statementList.append(LogOp.AND)
+    statementList = statementList[:-1]
+    whereClause = WhereClause(statementList) if len(statementList) > 0 else None
+
+    columns = ["{0}.{1}".format(table_name, col) for table_name in CONVERGENCE_CATEGORY_TABLES
+               for col in context.database_model.get_table_class(table_name).__annotations__
+               if col not in EXCLUDE_FROM_COLUMN_FIELDS and col not in EXCLUDE_FROM_CATEGORY_FIELDS]
+    data = context.repository.get_raw_data_for_table("conv_results", columns, whereClause)
+    if len(data) == 0:
+        return jsonify({})
+    data_with_unique_options: Dict[str, set] = {col: set() for col in data[0]}
+    for entry in data:
+        for col in entry:
+            data_with_unique_options[col].add(entry[col])
+
+    output = {display_name: {col: list(data_with_unique_options["{0}.{1}".format(table_name, col)])
+                             for col in context.database_model.get_table_class(table_name).__annotations__
+                             if col not in EXCLUDE_FROM_COLUMN_FIELDS and col not in EXCLUDE_FROM_CATEGORY_FIELDS}
+              for table_name, display_name in CONVERGENCE_CATEGORY_TABLES.items()}
+    return _corsify_actual_response(jsonify(output))
+
+@app.route('/data/convergence', methods=['POST', 'OPTIONS'])
 def data_in():
+    if request.method == "OPTIONS":
+        return _build_cors_prelight_response()
     data = request.json
     for row in data:
         if context.repository.check_table_accepts_data_recursive(row, Convergence_Results.metadata.name):

@@ -103,3 +103,11 @@ export interface Conv_Results {
   cpu_usage_rp_pim_stddev?: string;
   [propName: string]: any;
 }
+
+export interface CategoryGroup {
+  [categoryName: string]: Array<string>;
+}
+
+export interface Categories {
+  [groupName: string]: CategoryGroup;
+}

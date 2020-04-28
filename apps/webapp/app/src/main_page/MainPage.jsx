@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getData } from "../utils/Api";
+import { getData, getCategories } from "../utils/Api";
 import { PageWrapper } from "./styles/MainPage.jsx";
 import TestCaseDetailsGraph from "./TestCaseDetailsGraph";
 import TestCaseDetailsTable from "./TestCaseDetailsTable";
@@ -14,14 +14,21 @@ const MainPage = () => {
     "max_delay",
   ]);
   const [options, setOptions] = useState({});
+  const [categories, setCategories] = useState({});
 
   const fetchData = async () => {
     const [respData, status] = await getData();
     setData(respData);
   };
 
+  const fetchCategories = async () => {
+    const [respData, status] = await getCategories();
+    setCategories(respData);
+  };
+
   useEffect(() => {
     fetchData();
+    fetchCategories();
   }, []);
 
   return (
