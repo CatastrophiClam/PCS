@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Conv_Results } from "../Types";
+import { Conv_Results } from "../types/Data";
 import { stringify } from "querystring";
 
 interface TestCaseDetailsTableProps {

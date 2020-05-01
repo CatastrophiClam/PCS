@@ -4,7 +4,7 @@ from uuid import uuid1
 from server.model.base_model_table import BaseModelTable
 from server.model.constants import EXCLUDE_FROM_HASH_FIELDS, EXCLUDE_FROM_COLUMN_FIELDS
 from server.model.database import Database as Database_Model
-from server.model.query_syntax import WhereClause, Statement, LogOp, Comp, Value
+from server.model.query_syntax import WhereClause, Statement, LogOp, Comp, Value, Clause
 from server.model.repository import Table, Column, Row, ForeignKey
 from server.repository.contants import DB_TYPE_TO_DECLARE_TYPE
 from server.repository.database import Database as Database_Repo
@@ -147,8 +147,8 @@ class Repository:
 
             data_hash = str(self.hash_fields_for_table(row, foreign_table_name))
             foreign_table_data_id = self.get_data_for_table(foreign_table_name, ["{0}.id".format(foreign_table_name)],
-                                                            WhereClause([Statement("{0}.hash".format(foreign_table_name),
-                                                                                   Comp.EQ, Value(data_hash))]))
+                                                            WhereClause([Clause([Statement("{0}.hash".format(foreign_table_name),
+                                                                        Comp.EQ, Value(data_hash))])]))
             if self.check_table_accepts_data_recursive(row, foreign_table_name):
                 if len(foreign_table_data_id) == 0:
                     entry_id = self.add_row_to_table_recursive(row, foreign_table_name)

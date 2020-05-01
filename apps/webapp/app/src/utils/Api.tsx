@@ -1,10 +1,10 @@
 import {
   BACKEND_DATA_ENDPOINT,
   BACKEND_CATEGORIES_ENDPOINT,
-} from "../constants";
+} from "../constants/Api";
 
-export const getData = async () => {
-  const res = await fetch(BACKEND_DATA_ENDPOINT, {
+export const getData = async (query: string) => {
+  const res = await fetch(`${BACKEND_DATA_ENDPOINT}${query}`, {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -25,8 +25,8 @@ export const getData = async () => {
   return [respJSON, status];
 };
 
-export const getCategories = async () => {
-  const res = await fetch(BACKEND_CATEGORIES_ENDPOINT, {
+export const getCategories = async (query: string) => {
+  const res = await fetch(`${BACKEND_CATEGORIES_ENDPOINT}${query}`, {
     method: "GET",
     headers: {
       Accept: "application/json",
