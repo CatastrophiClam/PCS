@@ -58,6 +58,7 @@ export const CategoryName = styled.td`
 export const CurrentFilterSectionWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 `;
 
 export const CurrentFilterHeader = styled.div`
@@ -69,6 +70,7 @@ export const CurrentFilterHeader = styled.div`
 export const AllFiltersSectionWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 `;
 
 export const AllFiltersHeader = styled.div`

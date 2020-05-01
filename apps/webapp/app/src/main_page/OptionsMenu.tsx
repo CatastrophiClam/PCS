@@ -50,6 +50,13 @@ const OptionsMenu = ({
     }
   };
 
+  const removeFilter = (ind: number) => {
+    const newFilters = [...filters].filter((_, i) => {
+      return i != ind;
+    });
+    setFilters(newFilters);
+  };
+
   const onSelectChangeMaker = (categoryGroup: string, category: string) => {
     const onSelectChange = (obj: any, info: any) => {
       let nextFilter: Categories = { ...currentFilter };
@@ -161,7 +168,7 @@ const OptionsMenu = ({
         <AllFiltersHeader>All Active Filters</AllFiltersHeader>
         {filters.map((filter, ind) => (
           <FilterWrapper key={ind}>
-            <Filter filter={filter} />
+            <Filter filter={filter} onClickX={() => removeFilter(ind)} />
           </FilterWrapper>
         ))}
       </AllFiltersSectionWrapper>

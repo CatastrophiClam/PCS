@@ -21,7 +21,7 @@ export const getData = async (query: string) => {
   for (let i = 0; i < respJSON.length; i++) {
     respJSON[i] = JSON.parse(respJSON[i]);
   }
-  console.log(respJSON);
+  //console.log(respJSON);
   return [respJSON, status];
 };
 
