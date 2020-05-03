@@ -2,6 +2,12 @@ import React from "react";
 
 import { Conv_Results } from "../types/Data";
 import { stringify } from "querystring";
+import {
+  Table,
+  HeaderData,
+  TableRow,
+  RowData,
+} from "./styles/TestCaseDetailsTable";
 
 interface TestCaseDetailsTableProps {
   data: Array<Conv_Results>;
@@ -22,32 +28,32 @@ const TestCaseDetailsTable = ({ data, columns }: TestCaseDetailsTableProps) => {
     {}
   );
   return (
-    <table>
+    <Table>
       <tbody>
         <tr>
-          <td>Testcase Name</td>
+          <HeaderData>Testcase Name</HeaderData>
           {columns.map((col_name) => {
-            return <td key={col_name}>{col_name}</td>;
+            return <HeaderData key={col_name}>{col_name}</HeaderData>;
           })}
         </tr>
         {Object.keys(conv_results_by_tc).map((tc_name) => {
           return conv_results_by_tc[tc_name].map((result_row, ind) => {
             return (
-              <tr key={`${tc_name}${ind}`}>
-                <td>{tc_name}</td>
+              <TableRow key={`${tc_name}${ind}`}>
+                <RowData>{tc_name}</RowData>
                 {columns.map((col_name) => {
                   return (
-                    <td key={`${tc_name}${col_name}${ind}`}>
+                    <RowData key={`${tc_name}${col_name}${ind}`}>
                       {result_row[col_name]}
-                    </td>
+                    </RowData>
                   );
                 })}
-              </tr>
+              </TableRow>
             );
           });
         })}
       </tbody>
-    </table>
+    </Table>
   );
 };
 

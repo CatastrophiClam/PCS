@@ -28,6 +28,12 @@ def data_out():
     data = context.repository.get_data_for_table("conv_results", ["*"], whereClause)
     return _corsify_actual_response(jsonify([d.to_json() for d in data]))
 
+@app.route('/data/count', methods=['GET'])
+def data_count():
+    whereClause = build_where_clause_from_request_items(request.args.items())
+    count = context.repository.count_data_for_table("conv_results", ["*"], whereClause)
+    return _corsify_actual_response(jsonify({"count": count}))
+
 @app.route('/categories', methods=['GET'])
 def categories_out():
     whereClause = build_where_clause_from_request_items(request.args.items())

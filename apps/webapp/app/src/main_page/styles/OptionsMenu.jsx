@@ -67,6 +67,11 @@ export const CurrentFilterHeader = styled.div`
   color: ${({ theme }) => theme.colors.purple};
 `;
 
+export const CurrentFilterInfoText = styled.div`
+  margin-top: 8px;
+  color: ${({ theme }) => theme.colors.gray};
+`;
+
 export const AllFiltersSectionWrapper = styled.div`
   display: flex;
   flex-direction: column;

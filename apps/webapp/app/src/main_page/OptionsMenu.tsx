@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { withTheme, DefaultTheme } from "styled-components";
 import Select from "react-select";
 import {
@@ -14,11 +14,14 @@ import {
   CurrentFilterSectionWrapper,
   CurrentFilterHeader,
   FilterWrapper,
+  CurrentFilterInfoText,
 } from "./styles/OptionsMenu";
 import { Categories } from "../types/Data";
 import { SELECT } from "../constants/Select";
 import Filter from "../components/Filter";
 import Button from "../components/Button";
+import { getDataCount } from "../utils/Api";
+import { turnFiltersIntoQuery } from "../utils/Filter";
 
 interface OptionsMenuProps {
   filters: Array<Categories>;
@@ -41,6 +44,14 @@ const OptionsMenu = ({
   theme,
 }: OptionsMenuProps) => {
   const [currentFilter, setCurrentFilter] = useState<Categories>({});
+  const [currentFilterDataCount, setCurrentFilterDataCount] = useState<number>(
+    0
+  );
+  const [prevFilter, setPrevFilter] = useState<Categories>({});
+  const [
+    shouldRealizeCurrentFilterChanges,
+    setShouldRealizeCurrentFilterChanges,
+  ] = useState(false);
 
   const addCurrentFilter = () => {
     if (Object.keys(currentFilter).length > 0) {
@@ -90,8 +101,23 @@ const OptionsMenu = ({
     return onSelectChange;
   };
 
+  const handleCurrentFilterChange = async () => {
+    if (prevFilter != currentFilter) {
+      const [data, status] = await getDataCount(
+        turnFiltersIntoQuery([currentFilter])
+      );
+      setCurrentFilterDataCount(data.count);
+      setPrevFilter(currentFilter);
+    }
+    setShouldRealizeCurrentFilterChanges(false);
+  };
+
+  useEffect(() => {
+    handleCurrentFilterChange();
+  }, [currentFilter, prevFilter]);
+
   const onMenuClose = () => {
-    console.log("On Menu Close");
+    setShouldRealizeCurrentFilterChanges(true);
   };
 
   return (
@@ -155,6 +181,11 @@ const OptionsMenu = ({
         <CurrentFilterSectionWrapper>
           <CurrentFilterHeader>Current Filter</CurrentFilterHeader>
           <Filter filter={currentFilter} />
+          {Object.keys(currentFilter).length != 0 && (
+            <CurrentFilterInfoText>
+              {`Current filter produces ${currentFilterDataCount} results`}
+            </CurrentFilterInfoText>
+          )}
           <Button
             width="160px"
             margin="16px 0 0 0"

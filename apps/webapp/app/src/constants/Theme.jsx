@@ -8,6 +8,7 @@ export default {
     lightPurple: "#A85990",
     purple: "#832161",
     darkPurple: "#530D37",
+    superLightGray: "#F5F3F5",
     lightGray: "#E6E2E5",
     gray: "#584B53",
     darkGray: "#3B2D34",

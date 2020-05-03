@@ -214,10 +214,15 @@ class Repository:
 
     # Get data in the form of a list of objects
     def get_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause) -> List[BaseModelTable]:
-        formatted_data = self.get_raw_data_for_table(table_name, fields, whereClause)
-        answers = [self.create_object_from_data_recursive(table_name, d) for d in formatted_data]
+        raw_data = self.get_raw_data_for_table(table_name, fields, whereClause)
+        answers = [self.create_object_from_data_recursive(table_name, d) for d in raw_data]
         return answers
 
+    # Count number of rows returned from certain query
+    # We use lazy counting way for now
+    def count_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause) -> int:
+        raw_data = self.get_raw_data_for_table(table_name, fields, whereClause)
+        return len(raw_data)
 
     def get_categories(self):
         pass
