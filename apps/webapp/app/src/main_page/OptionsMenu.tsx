@@ -28,6 +28,7 @@ interface OptionsMenuProps {
   categories: Categories;
   setFilters: Function;
   theme: DefaultTheme;
+  updateCategoriesWithFilter: Function;
 }
 
 const customStyles = {
@@ -42,16 +43,18 @@ const OptionsMenu = ({
   categories,
   setFilters,
   theme,
+  updateCategoriesWithFilter,
 }: OptionsMenuProps) => {
   const [currentFilter, setCurrentFilter] = useState<Categories>({});
   const [currentFilterDataCount, setCurrentFilterDataCount] = useState<number>(
     0
   );
-  const [prevFilter, setPrevFilter] = useState<Categories>({});
+  const [prevFilter, setPrevFilter] = useState<Categories>(currentFilter);
   const [
     shouldRealizeCurrentFilterChanges,
     setShouldRealizeCurrentFilterChanges,
   ] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
   const addCurrentFilter = () => {
     if (Object.keys(currentFilter).length > 0) {
@@ -108,16 +111,25 @@ const OptionsMenu = ({
       );
       setCurrentFilterDataCount(data.count);
       setPrevFilter(currentFilter);
+      setShouldRealizeCurrentFilterChanges(true);
     }
-    setShouldRealizeCurrentFilterChanges(false);
   };
 
   useEffect(() => {
     handleCurrentFilterChange();
   }, [currentFilter, prevFilter]);
 
+  const updateCategories = async () => {
+    setLoadingCategories(true);
+    await updateCategoriesWithFilter(currentFilter);
+    setLoadingCategories(false);
+  };
+
   const onMenuClose = () => {
-    setShouldRealizeCurrentFilterChanges(true);
+    if (shouldRealizeCurrentFilterChanges) {
+      updateCategories();
+    }
+    setShouldRealizeCurrentFilterChanges(false);
   };
 
   return (
@@ -167,6 +179,7 @@ const OptionsMenu = ({
                                 })
                               )}
                               width={285}
+                              isLoading={loadingCategories}
                             />
                           </td>
                         </tr>

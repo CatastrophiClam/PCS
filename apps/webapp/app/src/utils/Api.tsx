@@ -35,9 +35,9 @@ export const getData = async (query: string) => {
   return [respJSON, status];
 };
 
-export const getCategories = async (query: string) => {
+export const getCategories = async (category: string, query: string) => {
   let [respJSON, status] = await send_request(
-    `${BACKEND_CATEGORIES_ENDPOINT}${query}`,
+    `${BACKEND_CATEGORIES_ENDPOINT}${category}${query}`,
     {
       method: "GET",
       headers: {

@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 from flask import Flask, request, jsonify, make_response, Response
 
@@ -34,13 +34,18 @@ def data_count():
     count = context.repository.count_data_for_table("conv_results", ["*"], whereClause)
     return _corsify_actual_response(jsonify({"count": count}))
 
-@app.route('/categories', methods=['GET'])
-def categories_out():
+@app.route('/categories/<category>', methods=['GET'])
+def categories_out(category):
     whereClause = build_where_clause_from_request_items(request.args.items())
-
-    columns = ["{0}.{1}".format(table_name, col) for table_name in CONVERGENCE_CATEGORY_TABLES
-               for col in context.database_model.get_table_class(table_name).__annotations__
-               if col not in EXCLUDE_FROM_COLUMN_FIELDS and col not in EXCLUDE_FROM_CATEGORY_FIELDS]
+    columns: List[str]
+    if category == 'all':
+        columns = ["{0}.{1}".format(table_name, col) for table_name in CONVERGENCE_CATEGORY_TABLES
+                   for col in context.database_model.get_table_class(table_name).__annotations__
+                   if col not in EXCLUDE_FROM_COLUMN_FIELDS and col not in EXCLUDE_FROM_CATEGORY_FIELDS]
+    else:
+        columns = ["{0}.{1}".format(table_name, col) for table_name in CONVERGENCE_CATEGORY_TABLES
+                   for col in context.database_model.get_table_class(table_name).__annotations__
+                   if col == category]
     data = context.repository.get_raw_data_for_table("conv_results", columns, whereClause)
     if len(data) == 0:
         return jsonify({})
@@ -52,7 +57,7 @@ def categories_out():
 
     output = {display_name: {col: list(data_with_unique_options["{0}.{1}".format(table_name, col)])
                              for col in context.database_model.get_table_class(table_name).__annotations__
-                             if col not in EXCLUDE_FROM_COLUMN_FIELDS and col not in EXCLUDE_FROM_CATEGORY_FIELDS}
+                             if col not in EXCLUDE_FROM_COLUMN_FIELDS and col not in EXCLUDE_FROM_CATEGORY_FIELDS and "{0}.{1}".format(table_name, col) in data_with_unique_options}
               for table_name, display_name in CONVERGENCE_CATEGORY_TABLES.items()}
     return _corsify_actual_response(jsonify(output))
 

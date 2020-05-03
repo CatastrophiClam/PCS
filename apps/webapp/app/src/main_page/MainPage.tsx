@@ -13,9 +13,10 @@ import TestCaseDetailsGraph from "./TestCaseDetailsGraph";
 import TestCaseDetailsTable from "./TestCaseDetailsTable";
 import AdditionalDetailsGraph from "./AdditionalDetailsGraph";
 import OptionsMenu from "./OptionsMenu";
-import { Categories } from "../types/Data";
+import { Categories, CategoryGroup } from "../types/Data";
 import { turnFiltersIntoQuery } from "../utils/Filter";
 import { SELECT } from "../constants/Select";
+import { ALL_CATEGORY_CONST } from "../constants/Api";
 
 const NONE_OPTION = "(none)";
 
@@ -43,11 +44,6 @@ const MainPage = () => {
     setData(respData);
   };
 
-  const fetchCategories = async () => {
-    const [respData, status] = await getCategories("");
-    setCategories(respData);
-  };
-
   const fetchColumns = async () => {
     const [respData, status] = await getData("");
     if (respData.length > 0) {
@@ -65,6 +61,71 @@ const MainPage = () => {
     [NONE_OPTION]
   );
 
+  const updateSingleCategoryWithFilter = async (
+    newCategories: Categories,
+    filter: Categories,
+    categoryGroup: string,
+    categoryName: string
+  ) => {
+    let filterForCategory = Object.keys(filter).reduce(
+      (acc: Categories, curr) => {
+        acc[curr] = Object.keys(filter[curr]).reduce(
+          (acc1: CategoryGroup, curr1) => {
+            if (curr1 !== categoryName) {
+              acc1[curr1] = filter[curr][curr1];
+            }
+            return acc1;
+          },
+          {}
+        );
+        return acc;
+      },
+      {}
+    );
+    if (
+      filterForCategory[categoryGroup] &&
+      Object.keys(filterForCategory[categoryGroup]).length == 0
+    ) {
+      delete filterForCategory[categoryGroup];
+    }
+    let [respData, status] = await getCategories(
+      categoryName,
+      turnFiltersIntoQuery([filterForCategory])
+    );
+    if (!newCategories[categoryGroup]) {
+      newCategories[categoryGroup] = {};
+    }
+    newCategories[categoryGroup][categoryName] = [];
+    if (respData[categoryGroup] && respData[categoryGroup][categoryName]) {
+      newCategories[categoryGroup][categoryName] =
+        respData[categoryGroup][categoryName];
+    }
+  };
+
+  const updateCategoriesWithFilter = async (filter: Categories) => {
+    if (Object.keys(filter).length == 0) {
+      const [respData, status] = await getCategories(ALL_CATEGORY_CONST, "");
+      setCategories(respData);
+    } else {
+      let newCategories: Categories = {};
+      let promises: Array<Promise<void>> = [];
+      for (let categoryGroup in categories) {
+        for (let categoryName in categories[categoryGroup]) {
+          promises.push(
+            updateSingleCategoryWithFilter(
+              newCategories,
+              filter,
+              categoryGroup,
+              categoryName
+            )
+          );
+        }
+      }
+      await Promise.all(promises);
+      setCategories(newCategories);
+    }
+  };
+
   useEffect(() => {
     fetchColumns();
   }, []);
@@ -74,7 +135,7 @@ const MainPage = () => {
   }, [filters]);
 
   useEffect(() => {
-    fetchCategories();
+    updateCategoriesWithFilter({});
   }, []);
 
   const onSelectColumnChange = (obj: any, info: any) => {
@@ -110,6 +171,7 @@ const MainPage = () => {
         filters={filters}
         categories={categories}
         setFilters={setFilters}
+        updateCategoriesWithFilter={updateCategoriesWithFilter}
       />
       <ResultsWrapper>
         <ResultsHeader>Results</ResultsHeader>
