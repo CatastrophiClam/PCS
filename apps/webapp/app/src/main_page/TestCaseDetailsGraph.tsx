@@ -28,7 +28,7 @@ const TestCaseDetailsGraph = ({
   columns,
   dataLabelKey,
 }: TestCaseDetailsGraphProps) => {
-  const FlattenAndCropData = (input: Array<Conv_Results>) => {
+  const flattenAndCropData = (input: Array<Conv_Results>) => {
     const max_data_len = Math.floor(MAX_COLUMNS / columns.length);
     let output = input.slice(0, max_data_len);
     for (let i = 0; i < output.length; i++) {
@@ -43,8 +43,23 @@ const TestCaseDetailsGraph = ({
     return output;
   };
 
-  const dataToDisplay = FlattenAndCropData(data);
+  const guaranteeNumberData = (input: Array<Conv_Results>) => {
+    let output = [...input];
+    for (let i = 0; i < output.length; i++) {
+      output[i] = { ...input[i] };
+      Object.keys(output[i]).forEach((key) => {
+        if (columns.includes(key)) {
+          output[i][key] = parseFloat(output[i][key]);
+          if (typeof output[i][key] !== "number" || output[i][key] == NaN) {
+            output[i][key] = 0;
+          }
+        }
+      });
+    }
+    return output;
+  };
 
+  const dataToDisplay = guaranteeNumberData(flattenAndCropData(data));
   return (
     <ResponsiveContainer height={600}>
       <BarChart data={dataToDisplay} barCategoryGap={10}>

@@ -19,7 +19,7 @@ export const send_request = async (url: string, data: Object) => {
 
 export const getData = async (query: string) => {
   let [respJSON, status] = await send_request(
-    `${BACKEND_DATA_ENDPOINT}${query}`,
+    `${BACKEND_DATA_ENDPOINT}?${query}`,
     {
       method: "GET",
       headers: {
@@ -31,13 +31,13 @@ export const getData = async (query: string) => {
   for (let i = 0; i < respJSON.length; i++) {
     respJSON[i] = JSON.parse(respJSON[i]);
   }
-  //console.log(respJSON);
+  console.log(respJSON);
   return [respJSON, status];
 };
 
 export const getCategories = async (category: string, query: string) => {
   let [respJSON, status] = await send_request(
-    `${BACKEND_CATEGORIES_ENDPOINT}${category}${query}`,
+    `${BACKEND_CATEGORIES_ENDPOINT}${category}?${query}`,
     {
       method: "GET",
       headers: {
@@ -54,7 +54,7 @@ export const getCategories = async (category: string, query: string) => {
 
 export const getDataCount = async (query: string) => {
   let [respJSON, status] = await send_request(
-    `${BACKEND_DATA_COUNT_ENDPOINT}${query}`,
+    `${BACKEND_DATA_COUNT_ENDPOINT}?${query}`,
     {
       method: "GET",
       headers: {

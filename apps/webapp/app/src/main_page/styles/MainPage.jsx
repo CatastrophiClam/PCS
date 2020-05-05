@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Heading2, Heading4, BoxShadow } from "../../constants/Mixins";
+import { Heading2, Heading4, BoxShadow, Body } from "../../constants/Mixins";
 
 export const PageWrapper = styled.div`
   display: flex;
@@ -15,11 +15,27 @@ export const ResultsWrapper = styled.div`
   padding: 16px;
 `;
 
+export const ResultsHeaderAndPageInfo = styled.div`
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+  margin-bottom: 16px;
+`;
+
 export const ResultsHeader = styled.div`
   color: ${({ theme }) => theme.colors.purple};
   ${Heading2}
-  align-self: flex-start;
-  margin-bottom: 16px;
+`;
+
+export const PageInfo = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+export const PageText = styled.div`
+  ${Body}
+  color: ${({ theme }) => theme.colors.gray}
 `;
 
 export const DropdownChooserWrapper = styled.div`

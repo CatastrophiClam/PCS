@@ -10,6 +10,7 @@ from server.model.database import Database as Struct_Database
 from server.repository.repository import Repository
 from server.model.server import Context
 from server.repository.db_init import fit_db_to_model
+import re
 
 app = Flask(__name__)
 
@@ -18,14 +19,22 @@ context.database_model = Struct_Database()
 context.repository = Repository(Repo_Database(), context.database_model)
 fit_db_to_model(context)
 
+clauseQuery = re.compile('c\d+')
+
 @app.route('/')
 def hello_world():
     return 'Hello Flask!!'
 
 @app.route('/data', methods=['GET'])
 def data_out():
-    whereClause = build_where_clause_from_request_items(request.args.items())
-    data = context.repository.get_data_for_table("conv_results", ["*"], whereClause)
+    whereClause = build_where_clause_from_request_items([(key, request.args.get(key)) for key in request.args.keys() if clauseQuery.match(key) is not None])
+    page = request.args.get("page")
+    pageSize = request.args.get("page_size")
+    if page is None:
+        page = "0"
+    if pageSize is None:
+        pageSize = "100"
+    data = context.repository.get_data_for_table("conv_results", ["*"], whereClause, pageSize, int(page)*100)
     return _corsify_actual_response(jsonify([d.to_json() for d in data]))
 
 @app.route('/data/count', methods=['GET'])

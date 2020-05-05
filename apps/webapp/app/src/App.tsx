@@ -1,7 +1,9 @@
 import React from "react";
-import logo from "./logo.svg";
 import "./App.css";
 import MainPage from "./main_page/MainPage";
+import Modal from "react-modal";
+
+Modal.setAppElement("#root");
 
 const App = () => {
   return (

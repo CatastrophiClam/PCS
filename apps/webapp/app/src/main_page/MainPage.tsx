@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getData, getCategories } from "../utils/Api";
+import { getData, getCategories, getDataCount } from "../utils/Api";
 import Select from "react-select";
 import {
   PageWrapper,
@@ -8,15 +8,19 @@ import {
   DropdownChooserWrapper,
   DropdownChooserText,
   TestCaseDetailsGraphWrapper,
+  ResultsHeaderAndPageInfo,
+  PageInfo,
+  PageText,
 } from "./styles/MainPage.jsx";
 import TestCaseDetailsGraph from "./TestCaseDetailsGraph";
 import TestCaseDetailsTable from "./TestCaseDetailsTable";
-import AdditionalDetailsGraph from "./AdditionalDetailsGraph";
 import OptionsMenu from "./OptionsMenu";
 import { Categories, CategoryGroup } from "../types/Data";
 import { turnFiltersIntoQuery } from "../utils/Filter";
 import { SELECT } from "../constants/Select";
-import { ALL_CATEGORY_CONST } from "../constants/Api";
+import { ALL_CATEGORY_CONST, PAGE_SIZE } from "../constants/Api";
+import { isFieldResultField } from "../utils/Data";
+import Button from "../components/Button";
 
 const NONE_OPTION = "(none)";
 
@@ -33,14 +37,21 @@ const MainPage = () => {
     "fib_slope",
     "prefix_sec",
     "max_delay",
+    "detail_result",
   ]);
   const [columnsAvailable, setColumnsAvailable] = useState<Array<string>>([]);
   const [filters, setFilters] = useState<Array<Categories>>([]);
   const [categories, setCategories] = useState<Categories>({});
   const [dataLabelKey, setDataLabelKey] = useState<string | null>(null);
+  const [page, setPage] = useState(0); // 0 indexed
+  const [totalPages, setTotalPages] = useState(0); // 1 indexed
 
-  const fetchData = async (filters: Array<Categories>) => {
-    const [respData, status] = await getData(turnFiltersIntoQuery(filters));
+  const fetchDataAndDataCount = async (filters: Array<Categories>) => {
+    const [respData, status] = await getData(
+      `${turnFiltersIntoQuery(filters)}&page=${page}&page_size=${PAGE_SIZE}`
+    );
+    const [pages, status2] = await getDataCount(turnFiltersIntoQuery(filters));
+    setTotalPages(Math.ceil(pages.count / PAGE_SIZE));
     setData(respData);
   };
 
@@ -48,7 +59,7 @@ const MainPage = () => {
     const [respData, status] = await getData("");
     if (respData.length > 0) {
       const tempColsAvailable = Object.keys(respData[0]).filter((colName) => {
-        return typeof respData[0][colName] !== "object";
+        return isFieldResultField(colName, respData[0][colName]);
       });
       setColumnsAvailable(tempColsAvailable);
     }
@@ -131,8 +142,8 @@ const MainPage = () => {
   }, []);
 
   useEffect(() => {
-    fetchData(filters);
-  }, [filters]);
+    fetchDataAndDataCount(filters);
+  }, [filters, page]);
 
   useEffect(() => {
     updateCategoriesWithFilter({});
@@ -174,7 +185,32 @@ const MainPage = () => {
         updateCategoriesWithFilter={updateCategoriesWithFilter}
       />
       <ResultsWrapper>
-        <ResultsHeader>Results</ResultsHeader>
+        <ResultsHeaderAndPageInfo>
+          <ResultsHeader>Results</ResultsHeader>
+          <PageInfo>
+            <Button
+              padding="8px 16px"
+              height={32}
+              margin="0 16px 0 0"
+              handleClick={() => {
+                if (page > 0) setPage(page - 1);
+              }}
+            >
+              {"<"}
+            </Button>
+            <PageText>{`Page ${page + 1} of ${totalPages}`}</PageText>
+            <Button
+              padding="8px 16px"
+              height={32}
+              margin="0 0 0 16px"
+              handleClick={() => {
+                if (page < totalPages - 1) setPage(page + 1);
+              }}
+            >
+              {">"}
+            </Button>
+          </PageInfo>
+        </ResultsHeaderAndPageInfo>
         <DropdownChooserWrapper>
           <DropdownChooserText>Choose columns</DropdownChooserText>
           <Select
@@ -216,7 +252,6 @@ const MainPage = () => {
             dataLabelKey={dataLabelKey}
           />
         </TestCaseDetailsGraphWrapper>
-        <AdditionalDetailsGraph />
         <TestCaseDetailsTable data={data} columns={columns} />
       </ResultsWrapper>
     </PageWrapper>

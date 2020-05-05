@@ -192,7 +192,7 @@ class Repository:
         return s
 
     # Get data in the form of a list of flat dicts
-    def get_raw_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause) -> List[Dict[str, str]]:
+    def get_raw_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause, limit: str = None, offset: int = 0) -> List[Dict[str, str]]:
         all_tables = [table_name] + self.get_all_subtables(table_name)
         subtables_join_str = self.get_all_subtable_joins(table_name)
         if fields[0] == "*":
@@ -207,14 +207,15 @@ class Repository:
         s = "SELECT {0} FROM {1} {2}".format(fieldStr, table_name, subtables_join_str)
         if whereClause is not None:
             s += " WHERE {0}".format(str(whereClause))
+        s += " LIMIT {0} OFFSET {1}".format("NULL" if limit is None else limit, offset)
         print(s)
         data = self.db_repo.fetch(s)
         formatted_data = [{fields[j]: d[j] for j in range(len(fields))} for d in data]
         return formatted_data
 
     # Get data in the form of a list of objects
-    def get_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause) -> List[BaseModelTable]:
-        raw_data = self.get_raw_data_for_table(table_name, fields, whereClause)
+    def get_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause, limit: str = None, offset: int = 0) -> List[BaseModelTable]:
+        raw_data = self.get_raw_data_for_table(table_name, fields, whereClause, limit, offset)
         answers = [self.create_object_from_data_recursive(table_name, d) for d in raw_data]
         return answers
 

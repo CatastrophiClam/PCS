@@ -33,5 +33,5 @@ export const turnFiltersIntoQuery = (filters: Array<Categories>) => {
       ""
     );
     return `${query}c${ind}=${queryBody}`;
-  }, "?");
+  }, "");
 };
