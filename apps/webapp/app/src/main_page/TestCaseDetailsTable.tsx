@@ -11,13 +11,19 @@ import {
 } from "./styles/TestCaseDetailsTable";
 import AdditionalDetailsGraph from "./AdditionalDetailsGraph";
 import { DETAIL_RESULT } from "../constants/Api";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 interface TestCaseDetailsTableProps {
   data: Array<Conv_Results>;
   columns: Array<string>;
+  isLoading: boolean;
 }
 
-const TestCaseDetailsTable = ({ data, columns }: TestCaseDetailsTableProps) => {
+const TestCaseDetailsTable = ({
+  data,
+  columns,
+  isLoading,
+}: TestCaseDetailsTableProps) => {
   const [additionalDetails, setAdditionalDetails] = useState<string | null>(
     null
   );
@@ -45,6 +51,10 @@ const TestCaseDetailsTable = ({ data, columns }: TestCaseDetailsTableProps) => {
     }
     setAdditionalDetailsModalOpen(true);
   };
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <>

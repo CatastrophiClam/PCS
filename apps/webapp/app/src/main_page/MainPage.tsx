@@ -45,14 +45,17 @@ const MainPage = () => {
   const [dataLabelKey, setDataLabelKey] = useState<string | null>(null);
   const [page, setPage] = useState(0); // 0 indexed
   const [totalPages, setTotalPages] = useState(0); // 1 indexed
+  const [dataLoading, setDataLoading] = useState(false);
 
   const fetchDataAndDataCount = async (filters: Array<Categories>) => {
+    setDataLoading(true);
     const [respData, status] = await getData(
       `${turnFiltersIntoQuery(filters)}&page=${page}&page_size=${PAGE_SIZE}`
     );
     const [pages, status2] = await getDataCount(turnFiltersIntoQuery(filters));
     setTotalPages(Math.ceil(pages.count / PAGE_SIZE));
     setData(respData);
+    setDataLoading(false);
   };
 
   const fetchColumns = async () => {
@@ -250,9 +253,14 @@ const MainPage = () => {
             data={data}
             columns={columns}
             dataLabelKey={dataLabelKey}
+            isLoading={dataLoading}
           />
         </TestCaseDetailsGraphWrapper>
-        <TestCaseDetailsTable data={data} columns={columns} />
+        <TestCaseDetailsTable
+          data={data}
+          columns={columns}
+          isLoading={dataLoading}
+        />
       </ResultsWrapper>
     </PageWrapper>
   );

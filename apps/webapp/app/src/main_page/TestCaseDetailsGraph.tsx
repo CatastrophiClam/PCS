@@ -16,17 +16,20 @@ import {
   CONVERGENCE_TC_DATAKEY,
   chartColors,
 } from "../constants/Chart";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 interface TestCaseDetailsGraphProps {
   data: Array<Conv_Results>;
   columns: Array<string>;
   dataLabelKey?: string | null;
+  isLoading: boolean;
 }
 
 const TestCaseDetailsGraph = ({
   data,
   columns,
   dataLabelKey,
+  isLoading,
 }: TestCaseDetailsGraphProps) => {
   const flattenAndCropData = (input: Array<Conv_Results>) => {
     const max_data_len = Math.floor(MAX_COLUMNS / columns.length);
@@ -58,6 +61,10 @@ const TestCaseDetailsGraph = ({
     }
     return output;
   };
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
   const dataToDisplay = guaranteeNumberData(flattenAndCropData(data));
   return (

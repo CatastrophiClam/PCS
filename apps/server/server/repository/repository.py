@@ -208,7 +208,7 @@ class Repository:
         if whereClause is not None:
             s += " WHERE {0}".format(str(whereClause))
         s += " LIMIT {0} OFFSET {1}".format("NULL" if limit is None else limit, offset)
-        print(s)
+        # print(s)
         data = self.db_repo.fetch(s)
         formatted_data = [{fields[j]: d[j] for j in range(len(fields))} for d in data]
         return formatted_data
