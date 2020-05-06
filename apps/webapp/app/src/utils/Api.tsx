@@ -3,6 +3,7 @@ import {
   BACKEND_CATEGORIES_ENDPOINT,
   BACKEND_DATA_COUNT_ENDPOINT,
 } from "../constants/Api";
+import { Conv_Results } from "../types/Data";
 
 export const send_request = async (url: string, data: Object) => {
   const res = await fetch(url, data);
@@ -17,7 +18,11 @@ export const send_request = async (url: string, data: Object) => {
   return [respJSON, status];
 };
 
-export const getData = async (query: string) => {
+interface DataResponse extends Array<Array<Conv_Results> | string> {
+  0: Array<Conv_Results>;
+  1: string;
+}
+export const getData = async (query: string): Promise<DataResponse> => {
   let [respJSON, status] = await send_request(
     `${BACKEND_DATA_ENDPOINT}?${query}`,
     {

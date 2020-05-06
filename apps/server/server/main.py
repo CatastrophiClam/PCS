@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, make_response, Response
 
 from server.model.constants import CONVERGENCE_CATEGORY_TABLES, EXCLUDE_FROM_COLUMN_FIELDS, EXCLUDE_FROM_CATEGORY_FIELDS
 from server.model.projects.convergence import Results as Convergence_Results
-from server.model.query_syntax import WhereClause, Statement, Comp, Value, LogOp, Clause
+from server.model.query_syntax import WhereClause, Statement, Comp, Value, LogOp, Clause, Order
 from server.repository.database import Database as Repo_Database
 from server.model.database import Database as Struct_Database
 from server.repository.repository import Repository
@@ -34,7 +34,7 @@ def data_out():
         page = "0"
     if pageSize is None:
         pageSize = "100"
-    data = context.repository.get_data_for_table("conv_results", ["*"], whereClause, pageSize, int(page)*100)
+    data = context.repository.get_data_for_table("conv_results", ["*"], whereClause, pageSize, int(page)*100, Order("script_name", "ASC"))
     return _corsify_actual_response(jsonify([d.to_json() for d in data]))
 
 @app.route('/data/count', methods=['GET'])

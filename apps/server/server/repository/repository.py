@@ -4,7 +4,7 @@ from uuid import uuid1
 from server.model.base_model_table import BaseModelTable
 from server.model.constants import EXCLUDE_FROM_HASH_FIELDS, EXCLUDE_FROM_COLUMN_FIELDS
 from server.model.database import Database as Database_Model
-from server.model.query_syntax import WhereClause, Statement, LogOp, Comp, Value, Clause
+from server.model.query_syntax import WhereClause, Statement, LogOp, Comp, Value, Clause, Order
 from server.model.repository import Table, Column, Row, ForeignKey
 from server.repository.contants import DB_TYPE_TO_DECLARE_TYPE
 from server.repository.database import Database as Database_Repo
@@ -192,7 +192,7 @@ class Repository:
         return s
 
     # Get data in the form of a list of flat dicts
-    def get_raw_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause, limit: str = None, offset: int = 0) -> List[Dict[str, str]]:
+    def get_raw_data_for_table(self, table_name: str, fields: List[str], where_clause: WhereClause, limit: str = None, offset: int = 0, order: Order = None) -> List[Dict[str, str]]:
         all_tables = [table_name] + self.get_all_subtables(table_name)
         subtables_join_str = self.get_all_subtable_joins(table_name)
         if fields[0] == "*":
@@ -205,8 +205,10 @@ class Repository:
             fieldStr += fields[i]
 
         s = "SELECT {0} FROM {1} {2}".format(fieldStr, table_name, subtables_join_str)
-        if whereClause is not None:
-            s += " WHERE {0}".format(str(whereClause))
+        if where_clause is not None:
+            s += " WHERE {0}".format(str(where_clause))
+        if order is not None:
+            s += " {0}".format(str(order))
         s += " LIMIT {0} OFFSET {1}".format("NULL" if limit is None else limit, offset)
         # print(s)
         data = self.db_repo.fetch(s)
@@ -214,8 +216,8 @@ class Repository:
         return formatted_data
 
     # Get data in the form of a list of objects
-    def get_data_for_table(self, table_name: str, fields: List[str], whereClause: WhereClause, limit: str = None, offset: int = 0) -> List[BaseModelTable]:
-        raw_data = self.get_raw_data_for_table(table_name, fields, whereClause, limit, offset)
+    def get_data_for_table(self, table_name: str, fields: List[str], where_clause: WhereClause, limit: str = None, offset: int = 0, order: Order = None) -> List[BaseModelTable]:
+        raw_data = self.get_raw_data_for_table(table_name, fields, where_clause, limit, offset, order)
         answers = [self.create_object_from_data_recursive(table_name, d) for d in raw_data]
         return answers
 

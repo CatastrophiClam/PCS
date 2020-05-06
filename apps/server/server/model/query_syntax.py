@@ -69,3 +69,11 @@ class WhereClause:
                 s += " "
             s += str(self.clause[i])
         return s
+
+@dataclass
+class Order:
+    field: str
+    direction: str  # ASC or DESC
+
+    def __str__(self):
+        return "ORDER BY {0} {1}".format(self.field, self.direction)

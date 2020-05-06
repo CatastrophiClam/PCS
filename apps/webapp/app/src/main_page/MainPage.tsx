@@ -15,7 +15,7 @@ import {
 import TestCaseDetailsGraph from "./TestCaseDetailsGraph";
 import TestCaseDetailsTable from "./TestCaseDetailsTable";
 import OptionsMenu from "./OptionsMenu";
-import { Categories, CategoryGroup } from "../types/Data";
+import { Categories, CategoryGroup, Conv_Results } from "../types/Data";
 import { turnFiltersIntoQuery } from "../utils/Filter";
 import { SELECT } from "../constants/Select";
 import { ALL_CATEGORY_CONST, PAGE_SIZE } from "../constants/Api";
@@ -32,7 +32,7 @@ const customStyles = {
 };
 
 const MainPage = () => {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<Array<Conv_Results>>([]);
   const [columns, setColumns] = useState([
     "fib_slope",
     "prefix_sec",
