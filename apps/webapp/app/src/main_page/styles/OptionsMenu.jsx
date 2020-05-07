@@ -10,7 +10,7 @@ import {
 export const OptionsMenuWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: 32px;
   ${BoxShadow};
   border: 2px solid ${({ theme }) => theme.colors.lightGray};
   border-radius: 5px;
@@ -25,6 +25,7 @@ export const CreateFilterSectionHeader = styled.div`
   ${Heading2}
   color: ${({ theme }) => theme.colors.purple};
   align-self: flex-start;
+  margin-bottom: 16px;
 `;
 
 export const AllCategoryGroupsWrapper = styled.div`

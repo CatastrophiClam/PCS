@@ -15,5 +15,6 @@ export default {
     lightYellow: "ECC468",
     yellow: "#D8973C",
     darkYellow: "#A66A2A",
+    green: "#42994F",
   },
 };

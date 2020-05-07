@@ -12,7 +12,7 @@ export const ResultsWrapper = styled.div`
   flex-direction: column;
   margin-top: 32px;
   ${BoxShadow}
-  padding: 16px;
+  padding: 32px;
 `;
 
 export const ResultsHeaderAndPageInfo = styled.div`

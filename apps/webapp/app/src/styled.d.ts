@@ -12,12 +12,14 @@ declare module "styled-components" {
       lightPurple: string;
       purple: string;
       darkPurple: string;
+      superLightGray: string;
       lightGray: string;
       gray: string;
       darkGray: string;
       lightYellow: string;
       yellow: string;
       darkYellow: string;
+      green: string;
     };
   }
 }

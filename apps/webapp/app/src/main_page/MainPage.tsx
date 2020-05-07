@@ -39,6 +39,7 @@ const MainPage = () => {
     "max_delay",
     "detail_result",
   ]);
+  const [tableCategories, setTableCategories] = useState(["alias"]);
   const [columnsAvailable, setColumnsAvailable] = useState<Array<string>>([]);
   const [filters, setFilters] = useState<Array<Categories>>([]);
   const [categories, setCategories] = useState<Categories>({});
@@ -170,6 +171,24 @@ const MainPage = () => {
     setColumns(newColumns);
   };
 
+  const onSelectTableCategoryChange = (obj: any, info: any) => {
+    let newTableCategories = [...tableCategories];
+    switch (info.action) {
+      case SELECT.SELECT_OPTION:
+        newTableCategories.push(info.option.value);
+        break;
+      case SELECT.POP_VALUE:
+      case SELECT.REMOVE_VALUE:
+        newTableCategories = newTableCategories.filter(
+          (option) => option != info.removedValue.value
+        );
+        break;
+      case SELECT.CLEAR:
+        newTableCategories = [];
+    }
+    setTableCategories(newTableCategories);
+  };
+
   const onSelectDataLabelKeyChange = (obj: any, info: any) => {
     switch (info.action) {
       case SELECT.SELECT_OPTION:
@@ -256,9 +275,30 @@ const MainPage = () => {
             isLoading={dataLoading}
           />
         </TestCaseDetailsGraphWrapper>
+        <DropdownChooserWrapper>
+          <DropdownChooserText>
+            Choose categories to display along top
+          </DropdownChooserText>
+          <Select
+            closeMenuOnSelect={false}
+            value={tableCategories.map((col) => ({
+              value: col,
+              label: col,
+            }))}
+            onChange={onSelectTableCategoryChange}
+            styles={customStyles}
+            isMulti
+            options={categoriesAvailable.map((cat) => ({
+              value: cat,
+              label: cat,
+            }))}
+            width={500}
+          />
+        </DropdownChooserWrapper>
         <TestCaseDetailsTable
           data={data}
-          columns={columns}
+          result_fields={columns}
+          categories={tableCategories}
           isLoading={dataLoading}
         />
       </ResultsWrapper>
