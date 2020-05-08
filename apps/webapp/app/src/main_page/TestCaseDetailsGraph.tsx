@@ -69,7 +69,7 @@ const TestCaseDetailsGraph = ({
   const dataToDisplay = guaranteeNumberData(flattenAndCropData(data));
   return (
     <ResponsiveContainer height={600}>
-      <BarChart data={dataToDisplay} barCategoryGap={10}>
+      <BarChart data={dataToDisplay} barCategoryGap={10} maxBarSize={100}>
         <CartesianGrid strokeDasharray="3 3" />
         {columns.length > 0 && (
           <XAxis

@@ -11,6 +11,7 @@ from server.repository.repository import Repository
 from server.model.server import Context
 from server.repository.db_init import fit_db_to_model
 import re
+import pdb
 
 app = Flask(__name__)
 

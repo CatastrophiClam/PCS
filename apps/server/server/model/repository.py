@@ -45,8 +45,8 @@ class Table:
 @dataclass(frozen=True)
 class TableMetadata:
     name: TableName
-    primary_key: str = "id"
     non_nullable_fields: Set[str] = field(default_factory=set)
+    primary_key: str = "id"
     foreign_keys: Dict[FieldName, ForeignKey] = field(default_factory=dict)
 
 Row = Dict[str, str]

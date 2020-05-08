@@ -53,7 +53,6 @@ class Repository:
         s = "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE FROM information_schema.COLUMNS WHERE TABLE_NAME = '{0}'".format(table_name)
         data = self.db_repo.fetch(s)
         columns = [Column(i[0], DB_TYPE_TO_DECLARE_TYPE[i[1]], nullable=(i[2] == 'YES')) for i in data]
-
         fkeys = self.get_table_fkeys(table_name)
         pkeys = self.get_table_pkey(table_name)
         for col in columns:
@@ -112,7 +111,7 @@ class Repository:
         for key in row:
             if key in self.db_model.get_table_class(table_name).__annotations__ and row[key] is not None:
                 cols += (", " + key)
-                val_to_insert = row[key]
+                val_to_insert = str(row[key])
                 if self.db_model.get_table_class(table_name).__annotations__[key] is str:
                     val_to_insert = "'" + val_to_insert + "'"
                 vals += (", " + val_to_insert)
