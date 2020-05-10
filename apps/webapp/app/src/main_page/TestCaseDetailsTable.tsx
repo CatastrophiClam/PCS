@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import ReactModal from "react-modal";
 import { X } from "react-feather";
 import { Conv_Results } from "../types/Data";
@@ -316,4 +316,4 @@ const TestCaseDetailsTable = ({
   );
 };
 
-export default TestCaseDetailsTable;
+export default memo(TestCaseDetailsTable);

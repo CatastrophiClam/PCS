@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getData, getCategories, getDataCount } from "../utils/Api";
 import Select from "react-select";
 import {
@@ -19,10 +19,9 @@ import { Categories, CategoryGroup, Conv_Results } from "../types/Data";
 import { turnFiltersIntoQuery } from "../utils/Filter";
 import { SELECT } from "../constants/Select";
 import { ALL_CATEGORY_CONST, PAGE_SIZE } from "../constants/Api";
-import { isFieldResultField } from "../utils/Data";
+import { isFieldResultField, getColFromResult } from "../utils/Data";
 import Button from "../components/Button";
-
-const NONE_OPTION = "(none)";
+import { GRAPH_DATA_LABEL_KEY } from "../constants/Chart";
 
 const customStyles = {
   container: (provided: any, state: any) => ({
@@ -33,6 +32,7 @@ const customStyles = {
 
 const MainPage = () => {
   const [data, setData] = useState<Array<Conv_Results>>([]);
+  const prevDataRef = useRef<Array<Conv_Results>>([]);
   const [columns, setColumns] = useState([
     "fib_slope",
     "prefix_sec",
@@ -43,7 +43,7 @@ const MainPage = () => {
   const [columnsAvailable, setColumnsAvailable] = useState<Array<string>>([]);
   const [filters, setFilters] = useState<Array<Categories>>([]);
   const [categories, setCategories] = useState<Categories>({});
-  const [dataLabelKey, setDataLabelKey] = useState<string | null>(null);
+  const [dataLabels, setDataLabels] = useState<Array<string>>([]);
   const [page, setPage] = useState(0); // 0 indexed
   const [totalPages, setTotalPages] = useState(0); // 1 indexed
   const [dataLoading, setDataLoading] = useState(false);
@@ -73,7 +73,7 @@ const MainPage = () => {
     (all: Array<string>, categoryGroup) => {
       return all.concat(Object.keys(categories[categoryGroup]));
     },
-    [NONE_OPTION]
+    []
   );
 
   const updateSingleCategoryWithFilter = async (
@@ -141,6 +141,32 @@ const MainPage = () => {
     }
   };
 
+  const updateGraphDataLabels = () => {
+    const newData = [...data];
+    newData.forEach((element) => {
+      element[GRAPH_DATA_LABEL_KEY] = dataLabels.reduce((acc, curr, ind) => {
+        if (ind != 0) {
+          acc = `${acc} / `;
+        }
+        const result = getColFromResult(curr, element);
+        acc = `${acc}${result}`;
+        return acc;
+      }, "");
+    });
+    prevDataRef.current = newData;
+    setData(newData);
+  };
+
+  useEffect(() => {
+    if (data !== prevDataRef.current) {
+      updateGraphDataLabels();
+    }
+  }, [data]);
+
+  useEffect(() => {
+    updateGraphDataLabels();
+  }, [dataLabels]);
+
   useEffect(() => {
     fetchColumns();
   }, []);
@@ -190,12 +216,21 @@ const MainPage = () => {
   };
 
   const onSelectDataLabelKeyChange = (obj: any, info: any) => {
+    let newDataLabels = [...dataLabels];
     switch (info.action) {
       case SELECT.SELECT_OPTION:
-        const newKey = obj.value == NONE_OPTION ? null : obj.value;
-        setDataLabelKey(newKey);
+        newDataLabels.push(info.option.value);
         break;
+      case SELECT.POP_VALUE:
+      case SELECT.REMOVE_VALUE:
+        newDataLabels = newDataLabels.filter(
+          (option) => option != info.removedValue.value
+        );
+        break;
+      case SELECT.CLEAR:
+        newDataLabels = [];
     }
+    setDataLabels(newDataLabels);
   };
 
   return (
@@ -255,9 +290,11 @@ const MainPage = () => {
           <DropdownChooserText>Choose label</DropdownChooserText>
           <Select
             closeMenuOnSelect={false}
-            value={
-              dataLabelKey ? { value: dataLabelKey, label: dataLabelKey } : null
-            }
+            value={dataLabels.map((col) => ({
+              value: col,
+              label: col,
+            }))}
+            isMulti
             onChange={onSelectDataLabelKeyChange}
             styles={customStyles}
             options={categoriesAvailable.map((cat) => ({
@@ -271,7 +308,6 @@ const MainPage = () => {
           <TestCaseDetailsGraph
             data={data}
             columns={columns}
-            dataLabelKey={dataLabelKey}
             isLoading={dataLoading}
           />
         </TestCaseDetailsGraphWrapper>

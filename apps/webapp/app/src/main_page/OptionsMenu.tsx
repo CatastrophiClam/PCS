@@ -98,6 +98,7 @@ const OptionsMenu = ({
           break;
         case SELECT.CLEAR:
           delete nextFilter[categoryGroup];
+          updateCategories();
       }
       setCurrentFilter(nextFilter);
     };

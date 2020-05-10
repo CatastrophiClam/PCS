@@ -10,25 +10,34 @@ import {
   Legend,
   Bar,
   LabelList,
+  Text,
 } from "recharts";
 import {
   MAX_COLUMNS,
   CONVERGENCE_TC_DATAKEY,
   chartColors,
+  GRAPH_DATA_LABEL_KEY,
 } from "../constants/Chart";
 import LoadingSpinner from "../components/LoadingSpinner";
+
+const BarLabelRenderer = (props: any) => {
+  const { x, y, width, height, value } = props;
+  return (
+    <Text x={x + width / 2 - 2} y={y - 4} textAnchor="start" angle={-45}>
+      {value}
+    </Text>
+  );
+};
 
 interface TestCaseDetailsGraphProps {
   data: Array<Conv_Results>;
   columns: Array<string>;
-  dataLabelKey?: string | null;
   isLoading: boolean;
 }
 
 const TestCaseDetailsGraph = ({
   data,
   columns,
-  dataLabelKey,
   isLoading,
 }: TestCaseDetailsGraphProps) => {
   const flattenAndCropData = (input: Array<Conv_Results>) => {
@@ -67,6 +76,7 @@ const TestCaseDetailsGraph = ({
   }
 
   const dataToDisplay = guaranteeNumberData(flattenAndCropData(data));
+
   return (
     <ResponsiveContainer height={600}>
       <BarChart data={dataToDisplay} barCategoryGap={10} maxBarSize={100}>
@@ -81,13 +91,18 @@ const TestCaseDetailsGraph = ({
             tickMargin={8}
           />
         )}
-        <YAxis domain={[0, (dataMax) => dataMax * 1.25]} />
+        <YAxis domain={[0, (dataMax) => dataMax * 1.5]} allowDecimals={false} />
         <Tooltip />
         <Legend />
         {columns.map((col, ind) => (
           <Bar dataKey={col} fill={chartColors[ind]}>
-            {dataLabelKey && (
-              <LabelList dataKey={dataLabelKey} position="top" />
+            {ind == Math.floor(columns.length / 2) && (
+              <LabelList
+                dataKey={GRAPH_DATA_LABEL_KEY}
+                position="top"
+                angle={-45}
+                content={BarLabelRenderer}
+              ></LabelList>
             )}
           </Bar>
         ))}

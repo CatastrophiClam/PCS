@@ -12,3 +12,4 @@ export const chartColors = [
   "#537A5A",
   "#E3B23C",
 ];
+export const GRAPH_DATA_LABEL_KEY = "_data";
