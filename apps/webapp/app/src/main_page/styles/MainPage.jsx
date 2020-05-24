@@ -53,3 +53,9 @@ export const DropdownChooserText = styled.div`
 export const TestCaseDetailsGraphWrapper = styled.div`
   margin-bottom: 16px;
 `;
+
+export const BarBackgroundDiv = styled.div`
+  background-color: red;
+  width: 100%;
+  height: 100%;
+`;

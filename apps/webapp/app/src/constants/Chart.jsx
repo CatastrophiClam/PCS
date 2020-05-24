@@ -13,3 +13,4 @@ export const chartColors = [
   "#E3B23C",
 ];
 export const GRAPH_DATA_LABEL_KEY = "_data";
+export const EXCLUDE_FROM_GRAPH_FIELDS = ["detail_result", "DDTS"];

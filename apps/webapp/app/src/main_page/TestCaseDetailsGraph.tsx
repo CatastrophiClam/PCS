@@ -17,8 +17,11 @@ import {
   CONVERGENCE_TC_DATAKEY,
   chartColors,
   GRAPH_DATA_LABEL_KEY,
+  EXCLUDE_FROM_GRAPH_FIELDS,
 } from "../constants/Chart";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { BarBackgroundDiv } from "./styles/MainPage";
+import { getColFromResult } from "../utils/Data";
 
 const BarLabelRenderer = (props: any) => {
   const { x, y, width, height, value } = props;
@@ -33,12 +36,14 @@ interface TestCaseDetailsGraphProps {
   data: Array<Conv_Results>;
   columns: Array<string>;
   isLoading: boolean;
+  sortTestcasesCategory?: string;
 }
 
 const TestCaseDetailsGraph = ({
   data,
   columns,
   isLoading,
+  sortTestcasesCategory,
 }: TestCaseDetailsGraphProps) => {
   const flattenAndCropData = (input: Array<Conv_Results>) => {
     const max_data_len = Math.floor(MAX_COLUMNS / columns.length);
@@ -71,11 +76,40 @@ const TestCaseDetailsGraph = ({
     return output;
   };
 
+  // Keeps input sorted by test case, sorts all data with the same test case by category
+  const sortTestcasesByCategory = (
+    input: Array<Conv_Results>,
+    category?: string
+  ) => {
+    if (!category) {
+      return input;
+    }
+    let currArr: Array<Conv_Results> = [];
+    let pastCategory: string | null = null;
+    const sorter = (a: Conv_Results, b: Conv_Results) =>
+      getColFromResult(category, a) >= getColFromResult(category, b) ? 1 : -1;
+    let answer = input.reduce((acc: Array<Conv_Results>, curr) => {
+      if (getColFromResult(category, curr) !== pastCategory) {
+        acc = acc.concat(currArr.sort(sorter));
+        currArr = [curr];
+        pastCategory = getColFromResult(category, curr);
+      } else {
+        currArr.push(curr);
+      }
+      return acc;
+    }, []);
+    answer.concat(currArr.sort(sorter));
+    return answer;
+  };
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
-  const dataToDisplay = guaranteeNumberData(flattenAndCropData(data));
+  const dataToDisplay = sortTestcasesByCategory(
+    guaranteeNumberData(flattenAndCropData(data)),
+    sortTestcasesCategory
+  );
 
   return (
     <ResponsiveContainer height={600}>
@@ -94,18 +128,21 @@ const TestCaseDetailsGraph = ({
         <YAxis domain={[0, (dataMax) => dataMax * 1.5]} allowDecimals={false} />
         <Tooltip />
         <Legend />
-        {columns.map((col, ind) => (
-          <Bar dataKey={col} fill={chartColors[ind]}>
-            {ind == Math.floor(columns.length / 2) && (
-              <LabelList
-                dataKey={GRAPH_DATA_LABEL_KEY}
-                position="top"
-                angle={-45}
-                content={BarLabelRenderer}
-              ></LabelList>
-            )}
-          </Bar>
-        ))}
+        {columns.map(
+          (col, ind) =>
+            !EXCLUDE_FROM_GRAPH_FIELDS.includes(col) && (
+              <Bar dataKey={col} fill={chartColors[ind]}>
+                {ind == Math.floor(columns.length / 2) && (
+                  <LabelList
+                    dataKey={GRAPH_DATA_LABEL_KEY}
+                    position="top"
+                    angle={-45}
+                    content={BarLabelRenderer}
+                  ></LabelList>
+                )}
+              </Bar>
+            )
+        )}
       </BarChart>
     </ResponsiveContainer>
   );

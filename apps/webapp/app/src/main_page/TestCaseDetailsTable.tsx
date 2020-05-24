@@ -107,10 +107,6 @@ const processData = (
     return acc + curr.width;
   }, 0);
 
-  console.log(tableHeaders);
-  console.log(tableData);
-  console.log(hashToIndInHeaders);
-
   return [tableHeaders, tableData, numDataCols];
 };
 

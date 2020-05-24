@@ -6,7 +6,6 @@ export const isFieldResultField = (fieldName: string, data: any) => {
 
 const categoriesToHash = [
   (result: Conv_Results) => result.image_id.alias,
-  (result: Conv_Results) => result.testcase_id.scale,
   (result: Conv_Results) => result.testcase_id.trigger,
   (result: Conv_Results) => result.testbed_id.chassis,
   (result: Conv_Results) => result.testbed_id.interface,

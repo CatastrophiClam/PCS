@@ -30,6 +30,8 @@ const customStyles = {
   }),
 };
 
+const NONE_OPTION = "(None)";
+
 const MainPage = () => {
   const [data, setData] = useState<Array<Conv_Results>>([]);
   const prevDataRef = useRef<Array<Conv_Results>>([]);
@@ -47,6 +49,9 @@ const MainPage = () => {
   const [page, setPage] = useState(0); // 0 indexed
   const [totalPages, setTotalPages] = useState(0); // 1 indexed
   const [dataLoading, setDataLoading] = useState(false);
+  const [sortTestcasesCategory, setSortTestcasesCategory] = useState<string>(
+    NONE_OPTION
+  );
 
   const fetchDataAndDataCount = async (filters: Array<Categories>) => {
     setDataLoading(true);
@@ -153,13 +158,13 @@ const MainPage = () => {
         return acc;
       }, "");
     });
-    prevDataRef.current = newData;
     setData(newData);
+    return newData;
   };
 
   useEffect(() => {
     if (data !== prevDataRef.current) {
-      updateGraphDataLabels();
+      prevDataRef.current = updateGraphDataLabels();
     }
   }, [data]);
 
@@ -233,6 +238,14 @@ const MainPage = () => {
     setDataLabels(newDataLabels);
   };
 
+  const onSortTestcaseCategoriesChange = (obj: any, info: any) => {
+    switch (info.action) {
+      case SELECT.SELECT_OPTION:
+        setSortTestcasesCategory(obj.value);
+        break;
+    }
+  };
+
   return (
     <PageWrapper>
       <OptionsMenu
@@ -287,7 +300,7 @@ const MainPage = () => {
           />
         </DropdownChooserWrapper>
         <DropdownChooserWrapper>
-          <DropdownChooserText>Choose label</DropdownChooserText>
+          <DropdownChooserText>Choose labels</DropdownChooserText>
           <Select
             closeMenuOnSelect={false}
             value={dataLabels.map((col) => ({
@@ -298,6 +311,29 @@ const MainPage = () => {
             onChange={onSelectDataLabelKeyChange}
             styles={customStyles}
             options={categoriesAvailable.map((cat) => ({
+              value: cat,
+              label: cat,
+            }))}
+            width={500}
+          />
+        </DropdownChooserWrapper>
+        <DropdownChooserWrapper>
+          <DropdownChooserText>
+            Choose category to sort groups of test cases by
+          </DropdownChooserText>
+          <Select
+            closeMenuOnSelect={false}
+            value={
+              sortTestcasesCategory === NONE_OPTION
+                ? null
+                : {
+                    value: sortTestcasesCategory,
+                    label: sortTestcasesCategory,
+                  }
+            }
+            onChange={onSortTestcaseCategoriesChange}
+            styles={customStyles}
+            options={[NONE_OPTION, ...categoriesAvailable].map((cat) => ({
               value: cat,
               label: cat,
             }))}
