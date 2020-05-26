@@ -19,7 +19,12 @@ import { Categories, CategoryGroup, Conv_Results } from "../types/Data";
 import { turnFiltersIntoQuery } from "../utils/Filter";
 import { SELECT } from "../constants/Select";
 import { ALL_CATEGORY_CONST, PAGE_SIZE } from "../constants/Api";
-import { isFieldResultField, getColFromResult } from "../utils/Data";
+import {
+  isFieldResultField,
+  getColFromResult,
+  getLinkParamsFromState,
+  getDefaultsFromLinkParams,
+} from "../utils/Data";
 import Button from "../components/Button";
 import { GRAPH_DATA_LABEL_KEY } from "../constants/Chart";
 
@@ -33,26 +38,34 @@ const customStyles = {
 const NONE_OPTION = "(None)";
 
 const MainPage = () => {
+  const defaults = getDefaultsFromLinkParams(window.location.search.slice(1));
+
   const [data, setData] = useState<Array<Conv_Results>>([]);
   const prevDataRef = useRef<Array<Conv_Results>>([]);
-  const [columns, setColumns] = useState([
-    "fib_slope",
-    "prefix_sec",
-    "max_delay",
-    "detail_result",
-  ]);
-  const [tableCategories, setTableCategories] = useState(["alias"]);
+  const [columns, setColumns] = useState(
+    defaults.columns
+      ? defaults.columns
+      : ["fib_slope", "prefix_sec", "max_delay", "detail_result"]
+  );
+  const [tableCategories, setTableCategories] = useState(
+    defaults.tableCategories ? defaults.tableCategories : ["alias"]
+  );
   const [columnsAvailable, setColumnsAvailable] = useState<Array<string>>([]);
-  const [filters, setFilters] = useState<Array<Categories>>([]);
+  const [filters, setFilters] = useState<Array<Categories>>(
+    defaults.filters ? defaults.filters : []
+  );
   const [categories, setCategories] = useState<Categories>({});
-  const [dataLabels, setDataLabels] = useState<Array<string>>([]);
+  const [dataLabels, setDataLabels] = useState<Array<string>>(
+    defaults.dataLabels ? defaults.dataLabels : []
+  );
   const [page, setPage] = useState(0); // 0 indexed
   const [totalPages, setTotalPages] = useState(0); // 1 indexed
   const [dataLoading, setDataLoading] = useState(false);
   const [sortTestcasesCategory, setSortTestcasesCategory] = useState<string>(
-    NONE_OPTION
+    defaults.sortTestcasesCategory
+      ? defaults.sortTestcasesCategory
+      : NONE_OPTION
   );
-
   const fetchDataAndDataCount = async (filters: Array<Categories>) => {
     setDataLoading(true);
     const [respData, status] = await getData(
@@ -161,6 +174,17 @@ const MainPage = () => {
     setData(newData);
     return newData;
   };
+
+  useEffect(() => {
+    const newQuery = getLinkParamsFromState(
+      columns,
+      tableCategories,
+      dataLabels,
+      sortTestcasesCategory,
+      filters
+    );
+    window.history.pushState("", "", `${window.location.origin}/?${newQuery}`);
+  }, [columns, tableCategories, dataLabels, sortTestcasesCategory, filters]);
 
   useEffect(() => {
     if (data !== prevDataRef.current) {
