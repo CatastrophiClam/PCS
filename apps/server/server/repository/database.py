@@ -26,14 +26,27 @@ class Database:
 
     def execute(self, mutation: str):
         cursor = self.connection.cursor()
-        cursor.execute(mutation)
-        self.connection.commit()
-        cursor.close()
+        try:
+            cursor.execute(mutation)
+            self.connection.commit()
+        except Exception as e:
+            self.connection.rollback()
+            print("Received error: {0}".format(e))
+            raise
+        finally:
+            cursor.close()
 
     def fetch(self, query: str):
         cursor = self.connection.cursor()
-        cursor.execute(query)
-        data = cursor.fetchall()
-        cursor.close()
-        self.connection.commit()
+        data = None
+        try:
+            cursor.execute(query)
+            data = cursor.fetchall()
+            self.connection.commit()
+        except Exception as e:
+            self.connection.rollback()
+            print("Received error: {0}".format(e))
+            raise
+        finally:
+            cursor.close()
         return data
