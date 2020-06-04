@@ -105,10 +105,10 @@ export const getDefaultsFromLinkParams = (link: string): Defaults => {
     defaults.baseColumnHash = dict.baseColumnHash;
   }
   if (dict.filters && dict.filters !== "") {
-    const filters = dict.filters.split(";"); // filters separated by ";"
+    const filters = dict.filters.split(";;"); // filters separated by ";"
     defaults.filters = filters.map((filterString) => {
       let filter: Categories = {};
-      const categoriesWithOptions = filterString.split("|");
+      const categoriesWithOptions = filterString.split(";");
       categoriesWithOptions.forEach((categoryWithOptions) => {
         const [category, optionsString] = categoryWithOptions.split("!");
         const options = optionsString.split(",");
@@ -161,7 +161,7 @@ export const getLinkParamsFromState = (
         return `${acc1}${Object.keys(categories[groupName]).reduce(
           (acc2, categoryName, ind2) => {
             if (ind1 != 0 || ind2 != 0) {
-              acc2 = `${acc2}|`;
+              acc2 = `${acc2};`;
             }
             return `${acc2}${categoryName}!${categories[groupName][
               categoryName
@@ -178,7 +178,7 @@ export const getLinkParamsFromState = (
       ""
     );
     if (ind != 0) {
-      acc = `${acc};`;
+      acc = `${acc};;`;
     }
     return `${acc}${filterString}`;
   }, "")}`;
