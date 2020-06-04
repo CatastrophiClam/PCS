@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Heading4, Body } from "../../constants/Mixins";
+import { Heading4, Body, Heading2 } from "../../constants/Mixins";
 import FadeIn from "react-fade-in";
 
 export const TableWrapper = styled.div`
@@ -88,6 +88,13 @@ export const ChartWrapper = styled.div`
   background-color: white;
   border-radius: 5px;
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+export const ChartTitle = styled.div`
+  ${Heading2}
 `;
 
 interface DifferencePercentageProps {

@@ -18,7 +18,8 @@ const categoriesToHash = [
 
 export const hashResultRowByCategory = (result: Conv_Results) => {
   return categoriesToHash.reduce((acc, curr) => {
-    return `${acc}${curr(result)}`;
+    const val = curr(result);
+    return `${acc}${val ? val.replace(/ /g, "") : val}`;
   }, "");
 };
 
@@ -79,13 +80,7 @@ export const getColFromResult = (colName: string, result: Conv_Results) => {
 };
 
 export const getDefaultsFromLinkParams = (link: string): Defaults => {
-  let defaults: Defaults = {
-    columns: [],
-    tableCategories: [],
-    dataLabels: [],
-    sortTestcasesCategory: "",
-    filters: [],
-  };
+  let defaults: Defaults = {};
 
   const split = link.split("&");
   const dict = split.reduce((acc: { [key: string]: string }, exp) => {
@@ -105,6 +100,9 @@ export const getDefaultsFromLinkParams = (link: string): Defaults => {
   }
   if (dict.sortTestcasesCategory && dict.sortTestcasesCategory !== "") {
     defaults.sortTestcasesCategory = dict.sortTestcasesCategory;
+  }
+  if (dict.baseColumnHash && dict.baseColumnHash !== "") {
+    defaults.baseColumnHash = dict.baseColumnHash;
   }
   if (dict.filters && dict.filters !== "") {
     const filters = dict.filters.split(";"); // filters separated by ";"
@@ -131,7 +129,8 @@ export const getLinkParamsFromState = (
   tableCategories: Array<string>,
   dataLabels: Array<string>,
   sortTestcasesCategory: string,
-  filters: Array<Categories>
+  filters: Array<Categories>,
+  baseColumnHash: string | null
 ): string => {
   let link = `columns=${columns.reduce((acc, curr, ind) => {
     if (ind != 0) {
@@ -154,6 +153,7 @@ export const getLinkParamsFromState = (
     acc = `${acc}${curr}`;
     return acc;
   }, "")}`;
+  link = `${link}&baseColumnHash=${baseColumnHash ? baseColumnHash : ""}`;
   link = `${link}&sortTestcasesCategory=${sortTestcasesCategory}`;
   link = `${link}&filters=${filters.reduce((acc, categories, ind) => {
     const filterString = Object.keys(categories).reduce(

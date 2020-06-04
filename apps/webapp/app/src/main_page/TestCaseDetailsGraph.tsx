@@ -25,6 +25,7 @@ import { getColFromResult } from "../utils/Data";
 
 const BarLabelRenderer = (props: any) => {
   const { x, y, width, height, value } = props;
+  console.log(`RENDERING ${value}`);
   return (
     <Text x={x + width / 2 - 2} y={y - 4} textAnchor="start" angle={-45}>
       {value}
@@ -131,7 +132,7 @@ const TestCaseDetailsGraph = ({
         {columns.map(
           (col, ind) =>
             !EXCLUDE_FROM_GRAPH_FIELDS.includes(col) && (
-              <Bar dataKey={col} fill={chartColors[ind]}>
+              <Bar dataKey={col} fill={chartColors[ind]} key={col}>
                 {ind == Math.floor(columns.length / 2) && (
                   <LabelList
                     dataKey={GRAPH_DATA_LABEL_KEY}

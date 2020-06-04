@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import _ from "lodash";
 import { getData, getCategories, getDataCount } from "../utils/Api";
 import Select from "react-select";
 import {
@@ -40,12 +41,11 @@ const NONE_OPTION = "(None)";
 const MainPage = () => {
   const defaults = getDefaultsFromLinkParams(window.location.search.slice(1));
 
-  const [data, setData] = useState<Array<Conv_Results>>([]);
-  const prevDataRef = useRef<Array<Conv_Results>>([]);
+  const empty_data: Array<Conv_Results> = [];
+  const [data, setData] = useState<Array<Conv_Results>>(empty_data);
+  const prevDataRef = useRef<Array<Conv_Results>>(empty_data);
   const [columns, setColumns] = useState(
-    defaults.columns
-      ? defaults.columns
-      : ["fib_slope", "prefix_sec", "max_delay", "detail_result"]
+    defaults.columns ? defaults.columns : ["max_delay"]
   );
   const [tableCategories, setTableCategories] = useState(
     defaults.tableCategories ? defaults.tableCategories : ["alias"]
@@ -66,6 +66,10 @@ const MainPage = () => {
       ? defaults.sortTestcasesCategory
       : NONE_OPTION
   );
+  const [baseColumnHash, setBaseColumnHash] = useState<string | null>(
+    defaults.baseColumnHash ? defaults.baseColumnHash : null
+  );
+
   const fetchDataAndDataCount = async (filters: Array<Categories>) => {
     setDataLoading(true);
     const [respData, status] = await getData(
@@ -160,7 +164,7 @@ const MainPage = () => {
   };
 
   const updateGraphDataLabels = () => {
-    const newData = [...data];
+    const newData = _.cloneDeep(data);
     newData.forEach((element) => {
       element[GRAPH_DATA_LABEL_KEY] = dataLabels.reduce((acc, curr, ind) => {
         if (ind != 0) {
@@ -181,10 +185,18 @@ const MainPage = () => {
       tableCategories,
       dataLabels,
       sortTestcasesCategory,
-      filters
+      filters,
+      baseColumnHash
     );
     window.history.pushState("", "", `${window.location.origin}/?${newQuery}`);
-  }, [columns, tableCategories, dataLabels, sortTestcasesCategory, filters]);
+  }, [
+    columns,
+    tableCategories,
+    dataLabels,
+    sortTestcasesCategory,
+    filters,
+    baseColumnHash,
+  ]);
 
   useEffect(() => {
     if (data !== prevDataRef.current) {
@@ -396,6 +408,8 @@ const MainPage = () => {
           result_fields={columns}
           categories={tableCategories}
           isLoading={dataLoading}
+          baseColumnHash={baseColumnHash}
+          setBaseColumnHash={setBaseColumnHash}
         />
       </ResultsWrapper>
     </PageWrapper>

@@ -115,6 +115,8 @@ interface TestCaseDetailsTableProps {
   result_fields: Array<string>;
   categories: Array<string>;
   isLoading: boolean;
+  baseColumnHash: string | null;
+  setBaseColumnHash: Function;
 }
 
 const TestCaseDetailsTable = ({
@@ -122,10 +124,13 @@ const TestCaseDetailsTable = ({
   result_fields,
   categories,
   isLoading,
+  baseColumnHash,
+  setBaseColumnHash,
 }: TestCaseDetailsTableProps) => {
   const [additionalDetails, setAdditionalDetails] = useState<string | null>(
     null
   );
+  const [reportName, setReportName] = useState<string | undefined>("");
   const [
     isAdditionalDetailsModalOpen,
     setAdditionalDetailsModalOpen,
@@ -133,13 +138,16 @@ const TestCaseDetailsTable = ({
 
   const [tableHeaders, tableData, numDataCols] = processData(data, categories);
 
-  const openGraphModal = (detailed_result: string | undefined) => {
+  const openGraphModal = (
+    detailed_result: string | undefined,
+    report_name: string | undefined
+  ) => {
     if (detailed_result) {
       setAdditionalDetails(detailed_result);
+      setReportName(report_name);
     }
     setAdditionalDetailsModalOpen(true);
   };
-  const [baseColumnHash, setBaseColumnHash] = useState<string | null>(null);
 
   const getDifferencePercentage = (
     testcaseRow: DataObj,
@@ -259,7 +267,10 @@ const TestCaseDetailsTable = ({
                               result[result_field] ? (
                                 <a
                                   onClick={() =>
-                                    openGraphModal(result[result_field])
+                                    openGraphModal(
+                                      result[result_field],
+                                      result.testcase_id.script_name
+                                    )
                                   }
                                 >
                                   graph
@@ -304,7 +315,10 @@ const TestCaseDetailsTable = ({
             >
               <X />
             </ModalX>
-            <AdditionalDetailsGraph details={additionalDetails} />
+            <AdditionalDetailsGraph
+              details={additionalDetails}
+              reportName={reportName}
+            />
           </ModalChildren>
         </ReactModal>
       )}

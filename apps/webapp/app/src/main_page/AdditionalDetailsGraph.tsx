@@ -10,17 +10,21 @@ import {
   Legend,
   Line,
 } from "recharts";
-import { ChartWrapper } from "./styles/TestCaseDetailsTable";
+import { ChartWrapper, ChartTitle } from "./styles/TestCaseDetailsTable";
 import { chartColors } from "../constants/Chart";
 
 interface AdditionalDetailsGraphProps {
   details: string | null;
+  reportName: string | undefined;
 }
 
-const AdditionalDetailsGraph = ({ details }: AdditionalDetailsGraphProps) => {
+const AdditionalDetailsGraph = ({
+  details,
+  reportName,
+}: AdditionalDetailsGraphProps) => {
   const d: string = details ? details : "";
   const dataByLines = _.split(d, "\n").map((linestr) => _.split(linestr, ","));
-  const lines = dataByLines.map((_, ind) => `Line${ind}`);
+  const lines = dataByLines.map((_, ind) => `Iteration ${ind}`);
 
   const maxLineLength = dataByLines.reduce((acc, curr) => {
     if (curr.length > acc) {
@@ -33,7 +37,7 @@ const AdditionalDetailsGraph = ({ details }: AdditionalDetailsGraphProps) => {
     let currObj: { [key: string]: number } = { x: i };
     for (let j = 0; j < dataByLines.length; j++) {
       if (dataByLines[j].length > i) {
-        currObj[`Line${j}`] = parseInt(dataByLines[j][i]);
+        currObj[`Iteration ${j}`] = parseInt(dataByLines[j][i]);
       }
     }
     flatData.push(currObj);
@@ -41,6 +45,7 @@ const AdditionalDetailsGraph = ({ details }: AdditionalDetailsGraphProps) => {
 
   return (
     <ChartWrapper>
+      <ChartTitle>{reportName}</ChartTitle>
       <LineChart
         width={800}
         height={400}
@@ -55,7 +60,7 @@ const AdditionalDetailsGraph = ({ details }: AdditionalDetailsGraphProps) => {
         {dataByLines.map((_, ind) => (
           <Line
             type="monotone"
-            dataKey={`Line${ind}`}
+            dataKey={`Iteration ${ind}`}
             stroke={chartColors[ind]}
             dot={false}
           />
